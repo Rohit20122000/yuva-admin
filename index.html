@@ -147,9 +147,9 @@
   <div class="sidebar">
     <div class="sidebar-logo"><div class="icon">🚀</div><div><span>Yuva</span><small>Admin Panel</small></div></div>
     <nav>
-      <a href="#" class="active">📋 Jobs Management</a>
+      <a href="#" class="active" id="navJobs" onclick="showJobsPage()">📋 Jobs Management</a>
       <a href="#" onclick="alert('Users section coming soon!')">👥 Users</a>
-      <a href="#" onclick="showAffairs()">📰 Current Affairs</a>
+      <a href="#" id="navAffairs" onclick="showAffairsPage()">📰 Current Affairs</a>
       <a href="#" onclick="alert('Analytics coming soon!')">📊 Analytics</a>
       <a href="#" onclick="alert('Settings coming soon!')">⚙️ Settings</a>
     </nav>
@@ -290,6 +290,23 @@ async function deleteJob(id,title){if(!confirm(`Delete "${title}"?\n\nThis canno
 function showToast(msg,type='success'){const t=document.createElement('div');t.className=`toast toast-${type}`;t.innerHTML=`${type==='success'?'✓':'✕'} ${msg}`;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
 checkSession();
 
+  // ─── NAVIGATION ───
+function showJobsPage() {
+  document.getElementById('navJobs').classList.add('active');
+  document.getElementById('navAffairs').classList.remove('active');
+  document.querySelector('.page-header').innerHTML = '<div><h1>Jobs Management</h1><p>Add, edit and manage all job listings</p></div><button class="btn btn-accent" onclick="openAddModal()">➕ Add New Job</button>';
+  document.querySelector('.stats-row').style.display = 'grid';
+  document.getElementById('filterTabs').style.display = 'flex';
+  document.querySelector('.table-header').innerHTML = '<h2>All Jobs</h2><div class="search-box"><span>🔍</span><input type="text" id="searchInput" placeholder="Search jobs..." oninput="renderJobs()"></div>';
+  loadJobs();
+}
+
+function showAffairsPage() {
+  document.getElementById('navJobs').classList.remove('active');
+  document.getElementById('navAffairs').classList.add('active');
+  showAffairs();
+}
+  
 // ─── CURRENT AFFAIRS MANAGEMENT ───
 async function showAffairs() {
   document.getElementById('jobsTable').innerHTML = '<div class="loading-overlay"><div class="spinner"></div><span>Loading current affairs...</span></div>';
@@ -300,8 +317,7 @@ async function showAffairs() {
   // Hide stats and filters
   document.querySelector('.stats-row').style.display = 'none';
   document.getElementById('filterTabs').style.display = 'none';
-  document.querySelector('.table-header').innerHTML = '<h2>All Articles</h2><button class="btn btn-outline btn-sm" onclick="location.reload()">← Back to Jobs</button>';
-
+  document.querySelector('.table-header').innerHTML = '<h2>All Articles</h2><button class="btn btn-outline btn-sm" onclick="showJobsPage()">← Back to Jobs</button>';
   try {
     let snap;
     try {
