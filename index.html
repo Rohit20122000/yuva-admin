@@ -149,7 +149,7 @@
     <nav>
       <a href="#" class="active">📋 Jobs Management</a>
       <a href="#" onclick="alert('Users section coming soon!')">👥 Users</a>
-      <a href="#" onclick="openAffairsModal()">📰 Current Affairs</a>
+      <a href="#" onclick="showAffairs()">📰 Current Affairs</a>
       <a href="#" onclick="alert('Analytics coming soon!')">📊 Analytics</a>
       <a href="#" onclick="alert('Settings coming soon!')">⚙️ Settings</a>
     </nav>
@@ -290,29 +290,99 @@ async function deleteJob(id,title){if(!confirm(`Delete "${title}"?\n\nThis canno
 function showToast(msg,type='success'){const t=document.createElement('div');t.className=`toast toast-${type}`;t.innerHTML=`${type==='success'?'✓':'✕'} ${msg}`;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
 checkSession();
 
-  // ─── CURRENT AFFAIRS ───
-function openAffairsModal() {
+// ─── CURRENT AFFAIRS MANAGEMENT ───
+async function showAffairs() {
+  document.getElementById('jobsTable').innerHTML = '<div class="loading-overlay"><div class="spinner"></div><span>Loading current affairs...</span></div>';
+  document.querySelector('.page-header h1').textContent = 'Current Affairs';
+  document.querySelector('.page-header p').textContent = 'Add, view and delete current affairs articles';
+  document.querySelector('.page-header button').outerHTML = '<button class="btn btn-accent" onclick="addAffair()">➕ Add Article</button>';
+  
+  // Hide stats and filters
+  document.querySelector('.stats-row').style.display = 'none';
+  document.getElementById('filterTabs').style.display = 'none';
+  document.querySelector('.table-header').innerHTML = '<h2>All Articles</h2><button class="btn btn-outline btn-sm" onclick="location.reload()">← Back to Jobs</button>';
+
+  try {
+    let snap;
+    try {
+      snap = await db.collection('current_affairs').orderBy('date', 'desc').get();
+    } catch(e) {
+      snap = await db.collection('current_affairs').get();
+    }
+
+    if (snap.empty) {
+      document.getElementById('jobsTable').innerHTML = '<div class="empty-state"><div class="emoji">📰</div><h3>No articles yet</h3><p>Click "Add Article" to create one!</p></div>';
+      return;
+    }
+
+    const catColors = {
+      'National': '#10B981', 'International': '#3B82F6',
+      'Economy': '#F59E0B', 'Science': '#6366F1', 'Sports': '#EC4899'
+    };
+
+    const rows = snap.docs.map(doc => {
+      const d = doc.data();
+      const date = d.date && d.date.toDate ? d.date.toDate().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : '-';
+      const color = catColors[d.category] || '#64748B';
+      const title = (d.title || 'Untitled').replace(/'/g, "\\'");
+
+      return `<tr>
+        <td style="max-width:300px">
+          <strong style="font-size:13px;color:#0F172A">${d.title || 'Untitled'}</strong><br>
+          <small style="color:#64748B">${(d.summary || '').substring(0, 80)}...</small>
+        </td>
+        <td><span style="background:${color}15;color:${color};padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700">${d.category || '-'}</span></td>
+        <td style="font-size:12px;color:#64748B">${d.source || '-'}</td>
+        <td style="font-size:12px;color:#64748B">${date}</td>
+        <td>
+          <button class="icon-btn danger" title="Delete" onclick="deleteAffair('${doc.id}', '${title}')">🗑</button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('jobsTable').innerHTML = `<table>
+      <thead><tr><th>Article</th><th>Category</th><th>Source</th><th>Date</th><th>Action</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+  } catch(e) {
+    document.getElementById('jobsTable').innerHTML = '<div class="empty-state"><div class="emoji">❌</div><h3>Error loading articles</h3><p>' + e.message + '</p></div>';
+  }
+}
+
+function addAffair() {
   const title = prompt('Article Title:');
-  if (!title) return;
-  const summary = prompt('Summary (2-3 lines):');
-  if (!summary) return;
-  const category = prompt('Category (National/International/Sports/Economy/Science):') || 'National';
-  const source = prompt('Source (e.g. Yuva Admin):') || 'Yuva Admin';
+  if (!title || !title.trim()) return;
+  const summary = prompt('Summary (2-3 sentences):');
+  if (!summary || !summary.trim()) return;
+  const category = prompt('Category:\n1. National\n2. International\n3. Sports\n4. Economy\n5. Science\n\nType the name:') || 'National';
+  const source = prompt('Source name (e.g. Yuva Admin):') || 'Yuva Admin';
 
   db.collection('current_affairs').add({
-    title: title,
-    summary: summary,
-    category: category,
-    source: source,
+    title: title.trim(),
+    summary: summary.trim(),
+    category: category.trim(),
+    source: source.trim(),
     date: new Date(),
-    readMinutes: Math.ceil(summary.split(' ').length / 200) || 1,
+    readMinutes: Math.max(1, Math.ceil(summary.trim().split(' ').length / 200)),
     url: '',
     imageUrl: '',
   }).then(() => {
-    showToast('Current affair added!', 'success');
+    showToast('Article added!', 'success');
+    showAffairs();
   }).catch(e => {
     showToast('Error: ' + e.message, 'error');
   });
+}
+
+async function deleteAffair(id, title) {
+  if (!confirm('Delete "' + title + '"?\n\nThis cannot be undone.')) return;
+  try {
+    await db.collection('current_affairs').doc(id).delete();
+    showToast('Article deleted', 'success');
+    showAffairs();
+  } catch(e) {
+    showToast('Delete failed: ' + e.message, 'error');
+  }
 }
 </script>
 </body>
