@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yuva Admin Panel</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root{--primary:#4F46E5;--primary-dark:#3730A3;--primary-light:#818CF8;--accent:#FF6B35;--accent-light:#FF9A6B;--bg:#F1F5F9;--card:#FFF;--text:#0F172A;--text-sec:#64748B;--text-light:#94A3B8;--border:#E2E8F0;--success:#10B981;--warning:#F59E0B;--error:#EF4444;--radius:14px;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04)}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary-dark),#1E1B4B,#0F172A);position:relative;overflow:hidden}
+    .login-screen::before{content:'';position:absolute;top:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(255,107,53,.15),transparent 70%);border-radius:50%}
+    .login-screen::after{content:'';position:absolute;bottom:-150px;left:-150px;width:400px;height:400px;background:radial-gradient(circle,rgba(129,140,248,.2),transparent 70%);border-radius:50%}
+    .login-card{background:rgba(255,255,255,.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:48px 40px;width:420px;text-align:center;position:relative;z-index:2;animation:fadeUp .6s ease}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+    .login-logo{width:80px;height:80px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 24px;box-shadow:0 8px 32px rgba(255,107,53,.35)}
+    .login-card h1{color:#fff;font-size:28px;font-weight:800;margin-bottom:6px}
+    .login-card p{color:rgba(255,255,255,.5);font-size:14px;margin-bottom:32px}
+    .login-field{position:relative;margin-bottom:16px;text-align:left}
+    .login-field label{display:block;color:rgba(255,255,255,.6);font-size:12px;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px}
+    .login-field input{width:100%;padding:14px 16px 14px 46px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.12);border-radius:12px;font-family:inherit;font-size:15px;color:#fff;outline:none;transition:all .2s}
+    .login-field input::placeholder{color:rgba(255,255,255,.3)}
+    .login-field input:focus{border-color:var(--accent);background:rgba(255,255,255,.12);box-shadow:0 0 0 3px rgba(255,107,53,.15)}
+    .login-field .field-icon{position:absolute;bottom:14px;left:16px;font-size:18px;opacity:.5}
+    .login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 4px 16px rgba(255,107,53,.35)}
+    .login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(255,107,53,.45)}
+    .login-error{display:none;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#FCA5A5;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px;animation:shake .4s ease}
+    @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+    .login-error.show{display:block}
+    .login-footer{margin-top:24px;color:rgba(255,255,255,.3);font-size:12px}
+    .password-toggle{position:absolute;bottom:14px;right:16px;background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px}
+    .password-toggle:hover{color:rgba(255,255,255,.7)}
+
+    .admin-app{display:none}.admin-app.show{display:block}.login-screen.hide{display:none}
+
+    .sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;background:linear-gradient(180deg,var(--primary-dark),#1E1B4B);padding:28px 20px;display:flex;flex-direction:column;z-index:100}
+    .sidebar-logo{display:flex;align-items:center;gap:12px;margin-bottom:40px}
+    .sidebar-logo .icon{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(255,107,53,.35)}
+    .sidebar-logo span{color:#fff;font-size:22px;font-weight:800}.sidebar-logo small{display:block;color:rgba(255,255,255,.5);font-size:11px;font-weight:500}
+    .sidebar nav a{display:flex;align-items:center;gap:12px;padding:12px 16px;color:rgba(255,255,255,.65);text-decoration:none;border-radius:10px;font-weight:500;font-size:14px;margin-bottom:4px;transition:all .2s}
+    .sidebar nav a:hover,.sidebar nav a.active{background:rgba(255,255,255,.12);color:#fff}.sidebar nav a.active{background:rgba(255,255,255,.18)}
+    .sidebar-footer{margin-top:auto;padding:14px;background:rgba(255,255,255,.08);border-radius:12px}
+    .sidebar-footer .admin-info{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .sidebar-footer .admin-avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px}
+    .sidebar-footer .admin-name{color:rgba(255,255,255,.9);font-size:13px;font-weight:700}
+    .sidebar-footer .admin-role{color:rgba(255,255,255,.45);font-size:11px}
+    .logout-btn{width:100%;padding:8px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.2);color:#FCA5A5;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+    .logout-btn:hover{background:rgba(239,68,68,.25)}
+
+    .main{margin-left:260px;padding:28px 32px;min-height:100vh}
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
+    .page-header h1{font-size:26px;font-weight:800}.page-header p{color:var(--text-sec);font-size:14px;margin-top:2px}
+
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+    .btn-primary{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3)}.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
+    .btn-accent{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(255,107,53,.3)}.btn-accent:hover{background:#E85D2A}
+    .btn-outline{background:#fff;color:var(--text);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+    .stat-card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border:1px solid var(--border)}
+    .stat-card .label{font-size:12px;color:var(--text-sec);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+    .stat-card .value{font-size:28px;font-weight:800;margin-top:6px}
+
+    .table-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
+    .table-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)}
+    .table-header h2{font-size:16px;font-weight:700}
+    .search-box{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);width:260px}
+    .search-box input{border:none;background:none;font-family:inherit;font-size:13px;color:var(--text);outline:none;width:100%}
+    .filter-tabs{display:flex;gap:6px;padding:12px 20px;border-bottom:1px solid var(--border);overflow-x:auto}
+    .filter-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text-sec);cursor:pointer;transition:all .2s;white-space:nowrap}
+    .filter-tab:hover,.filter-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+    table{width:100%;border-collapse:collapse}
+    thead th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:.8px;background:#F8FAFC;border-bottom:1px solid var(--border)}
+    tbody td{padding:14px 16px;font-size:13px;border-bottom:1px solid #F1F5F9;vertical-align:middle}
+    tbody tr:hover{background:#FAFBFF}
+    .job-title-cell{display:flex;align-items:center;gap:12px}
+    .job-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .job-title-text strong{font-size:13px;font-weight:700;color:var(--text);display:block}
+    .job-title-text small{font-size:11px;color:var(--text-sec)}
+    .category-badge{display:inline-block;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700}
+    .status-dot{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+    .status-dot::before{content:'';width:7px;height:7px;border-radius:50%}
+    .status-active{color:var(--success)}.status-active::before{background:var(--success)}
+    .status-closed{color:var(--error)}.status-closed::before{background:var(--error)}
+    .actions-cell{display:flex;gap:6px}
+    .icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .2s}
+    .icon-btn:hover{background:var(--bg);border-color:var(--primary)}
+    .icon-btn.danger:hover{background:#FEF2F2;border-color:var(--error)}
+    .empty-state{text-align:center;padding:60px 20px;color:var(--text-sec)}.empty-state .emoji{font-size:48px;margin-bottom:12px}
+
+    .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}
+    .modal-overlay.show{display:flex}
+    .modal{background:var(--card);border-radius:18px;width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:modalIn .3s ease}
+    @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}
+    .modal-header h2{font-size:18px;font-weight:800}
+    .modal-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--bg);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
+    .modal-close:hover{background:var(--error);color:#fff}
+    .modal-body{padding:24px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .form-group{display:flex;flex-direction:column}.form-group.full{grid-column:1/-1}
+    .form-group label{font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+    .form-group input,.form-group select,.form-group textarea{padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:border .2s;background:#fff}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
+    .form-group textarea{min-height:80px;resize:vertical}
+    .modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid var(--border)}
+
+    .toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:12px;color:#fff;font-weight:600;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:300;animation:toastIn .3s ease,toastOut .3s ease 2.7s;display:flex;align-items:center;gap:8px}
+    @keyframes toastIn{from{opacity:0;transform:translateY(20px)}}@keyframes toastOut{to{opacity:0;transform:translateY(20px)}}
+    .toast-success{background:var(--success)}.toast-error{background:var(--error)}
+    .spinner{width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .loading-overlay{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--text-sec);gap:12px}
+    .loading-overlay .spinner{border-color:var(--border);border-top-color:var(--primary)}
+
+    .cat-govt{background:#EEF2FF;color:#4338CA}.cat-bank{background:#FFFBEB;color:#B45309}.cat-psu{background:#ECFDF5;color:#047857}
+    .cat-railway{background:#FDF2F8;color:#BE185D}.cat-police{background:#EFF6FF;color:#1D4ED8}.cat-defence{background:#FEF2F2;color:#B91C1C}.cat-teaching{background:#FFFBEB;color:#92400E}
+    .icon-govt{background:#EEF2FF}.icon-bank{background:#FFFBEB}.icon-psu{background:#ECFDF5}.icon-railway{background:#FDF2F8}.icon-police{background:#EFF6FF}.icon-defence{background:#FEF2F2}.icon-teaching{background:#FFFBEB}
+
+    @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:16px}.stats-row{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr}.modal{width:95%;margin:0 10px}.login-card{width:90%;padding:32px 24px}}
+  </style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🚀</div>
+    <h1>Yuva Admin</h1>
+    <p>Sign in to manage your app</p>
+    <div class="login-error" id="loginError">❌ Invalid ID or password</div>
+    <div class="login-field">
+      <label>Admin ID</label><span class="field-icon">👤</span>
+      <input type="text" id="loginId" placeholder="Enter admin ID" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="login-field">
+      <label>Password</label><span class="field-icon">🔒</span>
+      <input type="password" id="loginPass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
+      <button class="password-toggle" onclick="togglePass()" id="passToggle">👁</button>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    <div class="login-footer">🔒 Secured Admin Panel • Yuva v1.0</div>
+  </div>
+</div>
+
+<div class="admin-app" id="adminApp">
+  <div class="sidebar">
+    <div class="sidebar-logo"><div class="icon">🚀</div><div><span>Yuva</span><small>Admin Panel</small></div></div>
+    <nav>
+      <a href="#" class="active">📋 Jobs Management</a>
+      <a href="#" onclick="alert('Users section coming soon!')">👥 Users</a>
+      <a href="#" onclick="alert('Analytics coming soon!')">📊 Analytics</a>
+      <a href="#" onclick="alert('Settings coming soon!')">⚙️ Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="admin-info"><div class="admin-avatar" id="adminAvatar">R</div><div><div class="admin-name" id="adminName">Rohit</div><div class="admin-role">Super Admin</div></div></div>
+      <button class="logout-btn" onclick="doLogout()">🚪 Log Out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="page-header"><div><h1>Jobs Management</h1><p>Add, edit and manage all job listings</p></div>
+      <button class="btn btn-accent" onclick="openAddModal()">➕ Add New Job</button></div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="label">Total Jobs</div><div class="value" id="statTotal" style="color:var(--primary)">-</div></div>
+      <div class="stat-card"><div class="label">Active Jobs</div><div class="value" id="statActive" style="color:var(--success)">-</div></div>
+      <div class="stat-card"><div class="label">Categories</div><div class="value" id="statCategories" style="color:var(--accent)">-</div></div>
+      <div class="stat-card"><div class="label">Total Vacancies</div><div class="value" id="statVacancies" style="color:var(--warning)">-</div></div>
+    </div>
+    <div class="table-card">
+      <div class="table-header"><h2>All Jobs</h2><div class="search-box"><span>🔍</span><input type="text" id="searchInput" placeholder="Search jobs..." oninput="renderJobs()"></div></div>
+      <div class="filter-tabs" id="filterTabs"></div>
+      <div id="jobsTable"><div class="loading-overlay"><div class="spinner"></div><span>Loading jobs from Firebase...</span></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="jobModal">
+  <div class="modal">
+    <div class="modal-header"><h2 id="modalTitle">Add New Job</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full"><label>Job Title *</label><input type="text" id="f_title" placeholder="e.g. GPSC Class 1-2 Officer"></div>
+        <div class="form-group full"><label>Department *</label><input type="text" id="f_department" placeholder="e.g. Gujarat Public Service Commission"></div>
+        <div class="form-group"><label>Category *</label><select id="f_category"><option value="Govt">🏛 Government</option><option value="Bank">🏦 Bank</option><option value="PSU">⚡ PSU</option><option value="Railway">🚂 Railway</option><option value="Police">👮 Police</option><option value="Defence">🎖 Defence</option><option value="Teaching">📚 Teaching</option></select></div>
+        <div class="form-group"><label>Vacancies *</label><input type="number" id="f_vacancies" placeholder="450" min="1"></div>
+        <div class="form-group"><label>Qualification</label><input type="text" id="f_qualification" placeholder="Graduation in any discipline"></div>
+        <div class="form-group"><label>Salary</label><input type="text" id="f_salary" placeholder="₹56,100 - ₹1,77,500"></div>
+        <div class="form-group"><label>Location</label><input type="text" id="f_location" placeholder="Gujarat / All India"></div>
+        <div class="form-group"><label>Last Date to Apply *</label><input type="date" id="f_lastDate"></div>
+        <div class="form-group full"><label>Description</label><textarea id="f_description" placeholder="Brief description of the job, selection process, etc."></textarea></div>
+        <div class="form-group full"><label>Apply Link</label><input type="url" id="f_applyLink" placeholder="https://example.gov.in"></div>
+        <div class="form-group full"><label>Tags (comma separated)</label><input type="text" id="f_tags" placeholder="Graduate, Gujarat, Officer"></div>
+        <div class="form-group"><label>Status</label><select id="f_active"><option value="true">✅ Active</option><option value="false">❌ Inactive</option></select></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="saveBtn" onclick="saveJob()">💾 Save Job</button></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script>
+// ╔══════════════════════════════════════════════════════════╗
+// ║  🔐 ADMIN CREDENTIALS — CHANGE THESE TO YOUR OWN!      ║
+// ╚══════════════════════════════════════════════════════════╝
+const ADMIN_ACCOUNTS = [
+  { id: 'rohit', password: 'yuva@2026', name: 'Rohit' },
+  // Add more: { id: 'admin2', password: 'pass123', name: 'Admin 2' },
+];
+
+// ╔══════════════════════════════════════════════════════════╗
+// ║  🔥 FIREBASE CONFIG — REPLACE WITH YOUR OWN!            ║
+// ╚══════════════════════════════════════════════════════════╝
+const firebaseConfig = {
+  apiKey: "AIzaSyB1epfQkG5uSyMLkotsWTUUHPHAnzYETlI",
+  authDomain: "yuva-8b75f.firebaseapp.com",
+  projectId: "yuva-8b75f",
+  storageBucket: "yuva-8b75f.firebasestorage.app",
+  messagingSenderId: "503611804041",
+  appId: "1:503611804041:web:64597796b508a13d9d7958"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+let currentAdmin=null,allJobs=[],activeFilter='All',editingId=null;
+const CATEGORIES=['All','Govt','Bank','PSU','Railway','Police','Defence','Teaching'];
+const CAT_EMOJI={Govt:'🏛',Bank:'🏦',PSU:'⚡',Railway:'🚂',Police:'👮',Defence:'🎖',Teaching:'📚'};
+
+function doLogin(){
+  const id=document.getElementById('loginId').value.trim().toLowerCase();
+  const pass=document.getElementById('loginPass').value;
+  const err=document.getElementById('loginError');
+  const admin=ADMIN_ACCOUNTS.find(a=>a.id.toLowerCase()===id&&a.password===pass);
+  if(admin){currentAdmin=admin;err.classList.remove('show');sessionStorage.setItem('yuva_admin',JSON.stringify(admin));
+    document.getElementById('loginScreen').classList.add('hide');document.getElementById('adminApp').classList.add('show');
+    document.getElementById('adminAvatar').textContent=admin.name[0].toUpperCase();document.getElementById('adminName').textContent=admin.name;loadJobs();
+  }else{err.classList.add('show');document.getElementById('loginPass').value='';document.getElementById('loginPass').focus();}
+}
+function doLogout(){if(!confirm('Log out of admin panel?'))return;sessionStorage.removeItem('yuva_admin');currentAdmin=null;
+  document.getElementById('loginScreen').classList.remove('hide');document.getElementById('adminApp').classList.remove('show');
+  document.getElementById('loginId').value='';document.getElementById('loginPass').value='';}
+function togglePass(){const i=document.getElementById('loginPass'),b=document.getElementById('passToggle');if(i.type==='password'){i.type='text';b.textContent='🙈'}else{i.type='password';b.textContent='👁'}}
+function checkSession(){const s=sessionStorage.getItem('yuva_admin');if(s){try{currentAdmin=JSON.parse(s);document.getElementById('loginScreen').classList.add('hide');document.getElementById('adminApp').classList.add('show');document.getElementById('adminAvatar').textContent=currentAdmin.name[0].toUpperCase();document.getElementById('adminName').textContent=currentAdmin.name;loadJobs()}catch(e){sessionStorage.removeItem('yuva_admin')}}}
+
+async function loadJobs(){try{const s=await db.collection('jobs').orderBy('postedDate','desc').get();allJobs=s.docs.map(d=>({id:d.id,...d.data()}))}catch(e){try{const s=await db.collection('jobs').get();allJobs=s.docs.map(d=>({id:d.id,...d.data()}))}catch(e2){showToast('Failed: '+e2.message,'error');allJobs=[]}}updateStats();renderFilters();renderJobs()}
+function updateStats(){const a=allJobs.filter(j=>j.active!==false),c=new Set(allJobs.map(j=>j.category).filter(Boolean)),v=allJobs.reduce((s,j)=>s+(parseInt(j.vacancies)||0),0);
+  document.getElementById('statTotal').textContent=allJobs.length;document.getElementById('statActive').textContent=a.length;document.getElementById('statCategories').textContent=c.size;document.getElementById('statVacancies').textContent=v.toLocaleString()}
+function renderFilters(){document.getElementById('filterTabs').innerHTML=CATEGORIES.map(c=>`<div class="filter-tab ${activeFilter===c?'active':''}" onclick="setFilter('${c}')">${c==='All'?'📋 All':(CAT_EMOJI[c]||'')+' '+c}</div>`).join('')}
+function setFilter(c){activeFilter=c;renderFilters();renderJobs()}
+
+function renderJobs(){
+  const search=document.getElementById('searchInput').value.toLowerCase();let f=allJobs;
+  if(activeFilter!=='All')f=f.filter(j=>j.category===activeFilter);
+  if(search)f=f.filter(j=>(j.title||'').toLowerCase().includes(search)||(j.department||'').toLowerCase().includes(search)||(j.location||'').toLowerCase().includes(search));
+  if(!f.length){document.getElementById('jobsTable').innerHTML='<div class="empty-state"><div class="emoji">📭</div><h3>No jobs found</h3><p>Click "Add New Job" to create one!</p></div>';return}
+  const rows=f.map(j=>{const cc='cat-'+(j.category||'').toLowerCase(),ic='icon-'+(j.category||'').toLowerCase(),em=CAT_EMOJI[j.category]||'💼',ac=j.active!==false;
+    let ld='-',dl='-';if(j.lastDate){const d=j.lastDate.toDate?j.lastDate.toDate():new Date(j.lastDate);ld=d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});const dd=Math.ceil((d-new Date())/(864e5));dl=dd>=0?dd+'d left':'Closed'}
+    return`<tr><td><div class="job-title-cell"><div class="job-icon ${ic}">${em}</div><div class="job-title-text"><strong>${j.title||'Untitled'}</strong><small>${j.department||'-'}</small></div></div></td>
+    <td><span class="category-badge ${cc}">${j.category||'-'}</span></td><td>${j.vacancies||'-'}</td>
+    <td>${ld}<br><small style="color:${dl==='Closed'?'var(--error)':'var(--text-light)'}">${dl}</small></td>
+    <td>${j.location||'-'}</td><td><span class="status-dot ${ac?'status-active':'status-closed'}">${ac?'Active':'Closed'}</span></td>
+    <td><div class="actions-cell"><button class="icon-btn" title="Edit" onclick="editJob('${j.id}')">✏️</button><button class="icon-btn danger" title="Delete" onclick="deleteJob('${j.id}','${(j.title||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`}).join('');
+  document.getElementById('jobsTable').innerHTML=`<table><thead><tr><th>Job Title</th><th>Category</th><th>Vacancies</th><th>Last Date</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`}
+
+function openAddModal(){editingId=null;document.getElementById('modalTitle').textContent='➕ Add New Job';document.getElementById('saveBtn').textContent='💾 Save Job';clearForm();const d=new Date();d.setDate(d.getDate()+30);document.getElementById('f_lastDate').value=d.toISOString().split('T')[0];document.getElementById('jobModal').classList.add('show')}
+function editJob(id){const j=allJobs.find(x=>x.id===id);if(!j)return;editingId=id;document.getElementById('modalTitle').textContent='✏️ Edit Job';document.getElementById('saveBtn').textContent='💾 Update Job';
+  document.getElementById('f_title').value=j.title||'';document.getElementById('f_department').value=j.department||'';document.getElementById('f_category').value=j.category||'Govt';
+  document.getElementById('f_vacancies').value=j.vacancies||'';document.getElementById('f_qualification').value=j.qualification||'';document.getElementById('f_salary').value=j.salary||'';
+  document.getElementById('f_location').value=j.location||'';document.getElementById('f_description').value=j.description||'';document.getElementById('f_applyLink').value=j.applyLink||'';
+  document.getElementById('f_tags').value=(j.tags||[]).join(', ');document.getElementById('f_active').value=j.active!==false?'true':'false';
+  if(j.lastDate){const d=j.lastDate.toDate?j.lastDate.toDate():new Date(j.lastDate);document.getElementById('f_lastDate').value=d.toISOString().split('T')[0]}
+  document.getElementById('jobModal').classList.add('show')}
+function closeModal(){document.getElementById('jobModal').classList.remove('show');editingId=null}
+function clearForm(){['f_title','f_department','f_vacancies','f_qualification','f_salary','f_location','f_description','f_applyLink','f_tags','f_lastDate'].forEach(i=>{document.getElementById(i).value=''});document.getElementById('f_category').value='Govt';document.getElementById('f_active').value='true'}
+
+async function saveJob(){const t=document.getElementById('f_title').value.trim(),d=document.getElementById('f_department').value.trim();if(!t){alert('Please enter a job title!');return}if(!d){alert('Please enter a department!');return}
+  const data={title:t,department:d,category:document.getElementById('f_category').value,vacancies:parseInt(document.getElementById('f_vacancies').value)||0,
+    qualification:document.getElementById('f_qualification').value.trim(),salary:document.getElementById('f_salary').value.trim(),
+    location:document.getElementById('f_location').value.trim()||'All India',description:document.getElementById('f_description').value.trim(),
+    applyLink:document.getElementById('f_applyLink').value.trim(),tags:document.getElementById('f_tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    active:document.getElementById('f_active').value==='true',lastDate:document.getElementById('f_lastDate').value?new Date(document.getElementById('f_lastDate').value):new Date(Date.now()+30*864e5)};
+  if(!editingId)data.postedDate=new Date();const btn=document.getElementById('saveBtn');btn.innerHTML='<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Saving...';btn.disabled=true;
+  try{if(editingId){await db.collection('jobs').doc(editingId).update(data);showToast('Job updated!','success')}else{await db.collection('jobs').add(data);showToast('New job added!','success')}closeModal();await loadJobs()}catch(e){showToast('Error: '+e.message,'error')}
+  btn.innerHTML=editingId?'💾 Update Job':'💾 Save Job';btn.disabled=false}
+
+async function deleteJob(id,title){if(!confirm(`Delete "${title}"?\n\nThis cannot be undone.`))return;try{await db.collection('jobs').doc(id).delete();showToast('Job deleted','success');await loadJobs()}catch(e){showToast('Delete failed: '+e.message,'error')}}
+function showToast(msg,type='success'){const t=document.createElement('div');t.className=`toast toast-${type}`;t.innerHTML=`${type==='success'?'✓':'✕'} ${msg}`;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
+checkSession();
+</script>
+</body>
+</html>
