@@ -149,6 +149,7 @@
     <nav>
       <a href="#" class="active">📋 Jobs Management</a>
       <a href="#" onclick="alert('Users section coming soon!')">👥 Users</a>
+      <a href="#" onclick="openAffairsModal()">📰 Current Affairs</a>
       <a href="#" onclick="alert('Analytics coming soon!')">📊 Analytics</a>
       <a href="#" onclick="alert('Settings coming soon!')">⚙️ Settings</a>
     </nav>
@@ -288,6 +289,31 @@ async function saveJob(){const t=document.getElementById('f_title').value.trim()
 async function deleteJob(id,title){if(!confirm(`Delete "${title}"?\n\nThis cannot be undone.`))return;try{await db.collection('jobs').doc(id).delete();showToast('Job deleted','success');await loadJobs()}catch(e){showToast('Delete failed: '+e.message,'error')}}
 function showToast(msg,type='success'){const t=document.createElement('div');t.className=`toast toast-${type}`;t.innerHTML=`${type==='success'?'✓':'✕'} ${msg}`;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
 checkSession();
+
+  // ─── CURRENT AFFAIRS ───
+function openAffairsModal() {
+  const title = prompt('Article Title:');
+  if (!title) return;
+  const summary = prompt('Summary (2-3 lines):');
+  if (!summary) return;
+  const category = prompt('Category (National/International/Sports/Economy/Science):') || 'National';
+  const source = prompt('Source (e.g. Yuva Admin):') || 'Yuva Admin';
+
+  db.collection('current_affairs').add({
+    title: title,
+    summary: summary,
+    category: category,
+    source: source,
+    date: new Date(),
+    readMinutes: Math.ceil(summary.split(' ').length / 200) || 1,
+    url: '',
+    imageUrl: '',
+  }).then(() => {
+    showToast('Current affair added!', 'success');
+  }).catch(e => {
+    showToast('Error: ' + e.message, 'error');
+  });
+}
 </script>
 </body>
 </html>
