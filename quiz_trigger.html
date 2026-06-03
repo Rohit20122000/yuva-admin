@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Yuva Admin · Daily Quiz Trigger</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0a0a0b; color: #ececf0;
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh; padding: 40px 20px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card {
+    width: 100%; max-width: 560px;
+    background: #131316; border: 1px solid #26262d;
+    border-radius: 6px; padding: 32px;
+  }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #9a9aa6; font-size: 13px; margin-bottom: 24px; }
+  label {
+    display: block; font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; color: #9a9aa6;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    margin: 14px 0 6px;
+  }
+  input {
+    width: 100%; padding: 10px 12px; border-radius: 3px;
+    background: #0a0a0b; color: #ececf0;
+    border: 1px solid #3a3a44;
+    font-family: inherit; font-size: 13px;
+  }
+  input:focus { outline: none; border-color: #d4ff3a; }
+  button {
+    width: 100%; padding: 12px; margin-top: 16px;
+    background: #d4ff3a; color: #000;
+    font-weight: 600; font-size: 13px;
+    border: none; border-radius: 3px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  button:hover { background: #b8e030; }
+  button:disabled { background: #3a3a44; color: #5e5e6a; cursor: not-allowed; }
+  .log {
+    margin-top: 20px; padding: 16px;
+    background: #0a0a0b; border: 1px solid #26262d;
+    border-radius: 3px; font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; color: #ececf0;
+    min-height: 100px; max-height: 400px; overflow-y: auto;
+    white-space: pre-wrap; word-break: break-word;
+  }
+  .log .ok { color: #5dd25d; }
+  .log .err { color: #ff5d5d; }
+  .log .info { color: #f5a623; }
+  .stat-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px; margin-top: 12px;
+  }
+  .stat {
+    padding: 10px; background: #0a0a0b;
+    border: 1px solid #26262d; border-radius: 3px;
+  }
+  .stat-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    color: #5e5e6a; text-transform: uppercase;
+  }
+  .stat-value {
+    font-size: 20px; font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>Daily Quiz · Manual Trigger</h1>
+  <div class="sub">Fires the Cloud Function to generate today's 54 quizzes (9 topics × 3 difficulties × 2 languages). Takes about 4-7 minutes.</div>
+
+  <div id="signInBox">
+    <label>Admin Email</label>
+    <input type="email" id="email" />
+    <label>Password</label>
+    <input type="password" id="password" />
+    <button id="signInBtn">Sign In</button>
+  </div>
+
+  <div id="triggerBox" style="display:none;">
+    <div class="sub" style="margin-bottom:8px;">Signed in as <span id="userEmail" style="color:#d4ff3a;"></span></div>
+    <button id="triggerBtn">⚡ Trigger Daily Quiz Generation</button>
+
+    <div class="stat-grid" id="stats" style="display:none;">
+      <div class="stat"><div class="stat-label">Success</div><div class="stat-value" id="statSuccess" style="color:#5dd25d;">—</div></div>
+      <div class="stat"><div class="stat-label">Failed</div><div class="stat-value" id="statFail" style="color:#ff5d5d;">—</div></div>
+      <div class="stat"><div class="stat-label">Date</div><div class="stat-value" id="statDate" style="font-size:14px;">—</div></div>
+    </div>
+
+    <div class="log" id="log">Sign in and click Trigger to start.</div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged }
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getFunctions, httpsCallable }
+  from "https://www.gstatic.com/firebasejs/10.7.0/firebase-functions.js";
+
+// ── PASTE YOUR FIREBASE CONFIG (same as gov_posts.html) ──
+const firebaseConfig = {
+  apiKey: "AIzaSyB1epfQkG5uSyMlKotsWTUUHPHAnzYETlI",
+  authDomain: "yuva-8b75f.firebaseapp.com",
+  projectId: "yuva-8b75f",
+  storageBucket: "yuva-8b75f.firebasestorage.app",
+  messagingSenderId: "503611804041",
+  appId: "1:503611804041:web:64597796b508a13d9d7958"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const functions = getFunctions(app, "asia-south1");
+const triggerQuizzes = httpsCallable(functions, "triggerDailyQuizzes");
+
+const $ = (id) => document.getElementById(id);
+const log = $("log");
+
+function appendLog(msg, cls = "") {
+  const line = document.createElement("div");
+  if (cls) line.className = cls;
+  line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    $("signInBox").style.display = "none";
+    $("triggerBox").style.display = "block";
+    $("userEmail").textContent = user.email;
+  } else {
+    $("signInBox").style.display = "block";
+    $("triggerBox").style.display = "none";
+  }
+});
+
+$("signInBtn").onclick = async () => {
+  try {
+    await signInWithEmailAndPassword(auth, $("email").value, $("password").value);
+  } catch (e) {
+    alert("Sign in failed: " + e.message);
+  }
+};
+
+$("triggerBtn").onclick = async () => {
+  const btn = $("triggerBtn");
+  btn.disabled = true;
+  btn.textContent = "⏳ Generating… (this takes 4-7 minutes — keep this tab open)";
+  $("stats").style.display = "grid";
+  log.innerHTML = "";
+
+  appendLog("Calling triggerDailyQuizzes Cloud Function...", "info");
+  appendLog("This generates 54 quizzes — please wait.", "info");
+  appendLog("Watch detailed progress at: Firebase Console → Functions → triggerDailyQuizzes → Logs", "info");
+
+  try {
+    const result = await triggerQuizzes({});
+    const d = result.data;
+    appendLog(`✅ Generation complete!`, "ok");
+    appendLog(`Date: ${d.date}`, "ok");
+    appendLog(`Successful: ${d.successCount} quizzes`, "ok");
+    appendLog(`Failed: ${d.failCount} quizzes`, d.failCount > 0 ? "err" : "ok");
+    $("statSuccess").textContent = d.successCount;
+    $("statFail").textContent = d.failCount;
+    $("statDate").textContent = d.date;
+  } catch (e) {
+    appendLog(`❌ Error: ${e.message}`, "err");
+    if (e.code) appendLog(`Code: ${e.code}`, "err");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "⚡ Trigger Daily Quiz Generation";
+  }
+};
+</script>
+</body>
+</html>
