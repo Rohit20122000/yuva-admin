@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Yuva Admin · Gov Posts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0b;
+    --bg-elev: #131316;
+    --bg-elev-2: #1a1a1f;
+    --border: #26262d;
+    --border-strong: #3a3a44;
+    --text: #ececf0;
+    --text-dim: #9a9aa6;
+    --text-faint: #5e5e6a;
+    --accent: #d4ff3a;
+    --accent-dim: #8aa820;
+    --danger: #ff5d5d;
+    --danger-bg: #2a0e0e;
+
+    /* status palette */
+    --s-none: #5e5e6a;
+    --s-notification: #f5a623;
+    --s-form-open: #5dd25d;
+    --s-form-closed: #6a82a8;
+    --s-admit: #4ecdc4;
+    --s-exam: #ff8c42;
+    --s-completed: #b07ed4;
+    --s-result: #20c997;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+
+  /* Top bar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .topbar .brand { display: flex; align-items: baseline; gap: 12px; }
+  .topbar .brand-name { font-weight: 600; letter-spacing: -0.01em; }
+  .topbar .brand-tag {
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.08em;
+  }
+  .topbar .user { display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--text-dim); }
+
+  /* Layout */
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+
+  /* Auth screen */
+  .auth-wrap {
+    min-height: calc(100vh - 56px); display: flex; align-items: center; justify-content: center;
+  }
+  .auth-card {
+    width: 380px; padding: 32px;
+    background: var(--bg-elev); border: 1px solid var(--border); border-radius: 4px;
+  }
+  .auth-card h1 { font-size: 20px; margin-bottom: 4px; }
+  .auth-card .sub { color: var(--text-dim); font-size: 13px; margin-bottom: 24px; }
+  .auth-card label { display: block; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin: 14px 0 6px; font-family: 'IBM Plex Mono', monospace; }
+  .auth-card input { width: 100%; }
+  .auth-error { color: var(--danger); background: var(--danger-bg); padding: 8px 12px; border-radius: 3px; font-size: 12px; margin-top: 12px; display: none; }
+
+  /* Form controls */
+  input[type=text], input[type=email], input[type=password], input[type=url], input[type=number], input[type=date], select, textarea {
+    width: 100%;
+    padding: 9px 11px;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border-strong);
+    border-radius: 3px;
+    font-family: inherit;
+    font-size: 13px;
+    transition: border-color 120ms, background 120ms;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--bg-elev);
+  }
+  textarea { resize: vertical; min-height: 64px; }
+
+  button {
+    cursor: pointer; font-family: inherit; font-size: 13px;
+    padding: 8px 14px; border-radius: 3px; border: 1px solid transparent;
+    background: var(--bg-elev-2); color: var(--text); transition: all 120ms;
+  }
+  button:hover { background: var(--bg-elev); border-color: var(--border-strong); }
+  button.primary { background: var(--accent); color: #000; font-weight: 600; }
+  button.primary:hover { background: #b8e030; }
+  button.ghost { background: transparent; border: 1px solid var(--border-strong); }
+  button.ghost:hover { background: var(--bg-elev); }
+  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  button.danger:hover { background: var(--danger-bg); }
+  button.icon { padding: 6px 8px; font-size: 12px; }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex; gap: 8px; align-items: center;
+    margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .toolbar .grow { flex: 1; min-width: 200px; }
+  .toolbar select { width: auto; min-width: 130px; }
+
+  /* Stats strip */
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1px; background: var(--border); margin-bottom: 20px;
+    border: 1px solid var(--border); border-radius: 3px; overflow: hidden;
+  }
+  .stat { background: var(--bg-elev); padding: 12px 14px; }
+  .stat .label { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .stat .value { font-size: 20px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; }
+
+  /* Table */
+  .table-wrap { border: 1px solid var(--border); border-radius: 3px; overflow: hidden; background: var(--bg-elev); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 10px 14px; font-size: 13px; border-bottom: 1px solid var(--border); }
+  th { background: var(--bg-elev-2); font-weight: 500; color: var(--text-dim); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-family: 'IBM Plex Mono', monospace; }
+  tbody tr:hover { background: var(--bg-elev-2); }
+  tbody tr:last-child td { border-bottom: none; }
+  td.name { font-weight: 500; }
+  td.dim { color: var(--text-dim); }
+  td.actions { text-align: right; white-space: nowrap; }
+  td.actions button { margin-left: 4px; }
+
+  /* Status pill */
+  .pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 8px; border-radius: 2px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.s-none { color: var(--s-none); background: rgba(94,94,106,0.15); }
+  .pill.s-notification_out { color: var(--s-notification); background: rgba(245,166,35,0.12); }
+  .pill.s-form_open { color: var(--s-form-open); background: rgba(93,210,93,0.12); }
+  .pill.s-form_closed { color: var(--s-form-closed); background: rgba(106,130,168,0.15); }
+  .pill.s-admit_card_out { color: var(--s-admit); background: rgba(78,205,196,0.12); }
+  .pill.s-exam_scheduled { color: var(--s-exam); background: rgba(255,140,66,0.12); }
+  .pill.s-exam_completed { color: var(--s-completed); background: rgba(176,126,212,0.12); }
+  .pill.s-result_out { color: var(--s-result); background: rgba(32,201,151,0.12); }
+
+  .scope-tag {
+    display: inline-block; padding: 2px 7px; border-radius: 2px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px;
+    background: var(--bg); border: 1px solid var(--border-strong);
+    color: var(--text-dim);
+  }
+
+  /* Empty / loading */
+  .empty {
+    padding: 60px 20px; text-align: center; color: var(--text-faint);
+    font-family: 'IBM Plex Mono', monospace; font-size: 13px;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: none; align-items: flex-start; justify-content: center;
+    z-index: 100; padding: 40px 20px; overflow-y: auto;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    width: 720px; max-width: 100%;
+    background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 4px;
+    overflow: hidden;
+  }
+  .modal-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .modal-head h2 { font-size: 16px; font-weight: 600; }
+  .modal-body { padding: 20px; max-height: calc(100vh - 200px); overflow-y: auto; }
+  .modal-foot {
+    display: flex; justify-content: space-between; gap: 8px;
+    padding: 14px 20px; border-top: 1px solid var(--border);
+    background: var(--bg-elev-2);
+  }
+  .modal-foot .right { display: flex; gap: 8px; margin-left: auto; }
+
+  /* Form sections */
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+  .field .hint { font-size: 11px; color: var(--text-faint); margin-top: 4px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+  .section-divider {
+    display: flex; align-items: center; gap: 10px;
+    margin: 24px 0 14px;
+    font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+    color: var(--accent); text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .section-divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    padding: 10px 18px; background: var(--bg-elev-2); border: 1px solid var(--border-strong);
+    border-radius: 3px; font-size: 13px; z-index: 200;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    opacity: 0; pointer-events: none; transition: opacity 200ms;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .toast.show { opacity: 1; }
+  .toast.success { border-color: var(--s-form-open); color: var(--s-form-open); }
+  .toast.error { border-color: var(--danger); color: var(--danger); }
+
+  .hidden { display: none !important; }
+
+  @media (max-width: 720px) {
+    .field-row, .field-row-3 { grid-template-columns: 1fr; }
+    .container { padding: 16px; }
+    table th:nth-child(2), table td:nth-child(2),
+    table th:nth-child(4), table td:nth-child(4) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-name">Yuva Admin</span>
+    <span class="brand-tag">// gov_posts</span>
+  </div>
+  <div class="user" id="userBar">
+    <span class="mono" id="userEmail"></span>
+    <button class="ghost icon" id="signOutBtn">Sign out</button>
+  </div>
+</header>
+
+<!-- AUTH VIEW -->
+<div id="authView" class="auth-wrap hidden">
+  <div class="auth-card">
+    <h1>Sign in</h1>
+    <div class="sub">Admin access required</div>
+    <label>Email</label>
+    <input type="email" id="authEmail" autocomplete="username" />
+    <label>Password</label>
+    <input type="password" id="authPassword" autocomplete="current-password" />
+    <div class="auth-error" id="authError"></div>
+    <div style="margin-top: 20px;">
+      <button class="primary" id="signInBtn" style="width: 100%;">Sign in →</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN VIEW -->
+<main id="mainView" class="container hidden">
+
+  <!-- Stats -->
+  <div class="stats" id="stats">
+    <div class="stat"><div class="label">Total posts</div><div class="value" id="statTotal">—</div></div>
+    <div class="stat"><div class="label">Central</div><div class="value" id="statCentral">—</div></div>
+    <div class="stat"><div class="label">Gujarat</div><div class="value" id="statGujarat">—</div></div>
+    <div class="stat"><div class="label">Active cycles</div><div class="value" id="statActive">—</div></div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <input type="text" id="searchInput" placeholder="Search by name…" class="grow" />
+    <select id="filterScope">
+      <option value="">All scopes</option>
+      <option value="Central">Central</option>
+      <option value="Gujarat">Gujarat</option>
+    </select>
+    <select id="filterDept">
+      <option value="">All departments</option>
+      <option value="UPSC">UPSC</option>
+      <option value="SSC">SSC</option>
+      <option value="RRB">RRB</option>
+      <option value="Banking">Banking</option>
+      <option value="Defence">Defence</option>
+      <option value="Police">Police</option>
+      <option value="Teaching">Teaching</option>
+      <option value="GPSC">GPSC</option>
+      <option value="State">State</option>
+      <option value="PSU">PSU</option>
+      <option value="Other">Other</option>
+    </select>
+    <select id="filterStatus">
+      <option value="">All statuses</option>
+      <option value="no_announcement">No announcement</option>
+      <option value="notification_out">Notification out</option>
+      <option value="form_open">Form open</option>
+      <option value="form_closed">Form closed</option>
+      <option value="admit_card_out">Admit card out</option>
+      <option value="exam_scheduled">Exam scheduled</option>
+      <option value="exam_completed">Exam completed</option>
+      <option value="result_out">Result out</option>
+    </select>
+    <button class="primary" id="newBtn">+ New post</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 28%">Name</th>
+          <th style="width: 14%">Scope / Dept</th>
+          <th style="width: 22%">Cycle status</th>
+          <th style="width: 18%">Last updated</th>
+          <th style="width: 18%; text-align: right">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="postRows"></tbody>
+    </table>
+    <div id="emptyState" class="empty hidden">No posts match your filters.</div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 id="modalTitle">New post</h2>
+      <button class="ghost icon" id="modalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <form id="postForm" autocomplete="off">
+
+        <div class="section-divider">// Basics</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Short name *</label>
+            <input type="text" id="f_name" required placeholder="SSC CGL" />
+          </div>
+          <div class="field">
+            <label>Full name</label>
+            <input type="text" id="f_full_name" placeholder="Staff Selection Commission - Combined Graduate Level" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Scope *</label>
+            <select id="f_scope" required>
+              <option value="Central">Central</option>
+              <option value="Gujarat">Gujarat</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Department *</label>
+            <select id="f_department" required>
+              <option value="UPSC">UPSC</option>
+              <option value="SSC">SSC</option>
+              <option value="RRB">RRB</option>
+              <option value="Banking">Banking</option>
+              <option value="Defence">Defence</option>
+              <option value="Police">Police</option>
+              <option value="Teaching">Teaching</option>
+              <option value="GPSC">GPSC</option>
+              <option value="State">State</option>
+              <option value="PSU">PSU</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="section-divider">// Description (bilingual)</div>
+        <div class="field">
+          <label>Description (English)</label>
+          <textarea id="f_desc_en" rows="3" placeholder="What this exam/post is about…"></textarea>
+        </div>
+        <div class="field">
+          <label>Description (Hindi / हिन्दी)</label>
+          <textarea id="f_desc_hi" rows="3" placeholder="यह परीक्षा/पद किस बारे में है…"></textarea>
+        </div>
+
+        <div class="section-divider">// Eligibility</div>
+        <div class="field-row-3">
+          <div class="field">
+            <label>Min age</label>
+            <input type="number" id="f_min_age" min="0" max="100" />
+          </div>
+          <div class="field">
+            <label>Max age</label>
+            <input type="number" id="f_max_age" min="0" max="100" />
+          </div>
+          <div class="field">
+            <label>Qualification</label>
+            <input type="text" id="f_qualification" placeholder="Graduation / 12th pass" />
+          </div>
+        </div>
+
+        <div class="section-divider">// Selection &amp; links</div>
+        <div class="field">
+          <label>Selection stages (in order)</label>
+          <input type="text" id="f_stages" placeholder="Tier 1, Tier 2, Skill Test, Document Verification" />
+          <div class="hint">Comma-separated. Order matters. e.g. for Police: "Physical Test, Written, Document Verification"</div>
+        </div>
+        <div class="field">
+          <label>Official website</label>
+          <input type="url" id="f_website" placeholder="https://ssc.nic.in" />
+        </div>
+
+        <div class="section-divider">// Current cycle</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Status *</label>
+            <select id="f_status" required>
+              <option value="no_announcement">No announcement</option>
+              <option value="notification_out">Notification out</option>
+              <option value="form_open">Form open</option>
+              <option value="form_closed">Form closed</option>
+              <option value="admit_card_out">Admit card out</option>
+              <option value="exam_scheduled">Exam scheduled</option>
+              <option value="exam_completed">Exam completed</option>
+              <option value="result_out">Result out</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Notification date</label>
+            <input type="date" id="f_notification_date" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Form opens</label>
+            <input type="date" id="f_form_start" />
+          </div>
+          <div class="field">
+            <label>Form closes</label>
+            <input type="date" id="f_form_end" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Exam date</label>
+            <input type="date" id="f_exam_date" />
+          </div>
+          <div class="field">
+            <label>Result date</label>
+            <input type="date" id="f_result_date" />
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Notification PDF URL</label>
+            <input type="url" id="f_pdf" placeholder="https://…" />
+          </div>
+          <div class="field">
+            <label>Apply link</label>
+            <input type="url" id="f_apply" placeholder="https://…" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Notes (English)</label>
+          <textarea id="f_notes_en" rows="2"></textarea>
+        </div>
+        <div class="field">
+          <label>Notes (Hindi)</label>
+          <textarea id="f_notes_hi" rows="2"></textarea>
+        </div>
+
+      </form>
+    </div>
+    <div class="modal-foot">
+      <button class="danger hidden" id="deleteBtn">Delete</button>
+      <div class="right">
+        <button class="ghost" id="cancelBtn">Cancel</button>
+        <button class="primary" id="saveBtn">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- SCRIPT -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import {
+  getFirestore, collection, doc, getDocs, setDoc, updateDoc, deleteDoc,
+  serverTimestamp, query, orderBy, addDoc
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+// ====================================================================
+// 🔑 FIREBASE CONFIG — paste your config here (same as your main admin)
+// ====================================================================
+const firebaseConfig = {
+  apiKey: "AIzaSyB1epfQkG5uSyMLkotsWTUUHPHAnzYETlI",
+  authDomain: "yuva-8b75f.firebaseapp.com",
+  projectId: "yuva-8b75f",
+  storageBucket: "yuva-8b75f.firebasestorage.app",
+  messagingSenderId: "503611804041",
+  appId: "1:503611804041:web:64597796b508a13d9d7958"
+};
+
+// ====================================================================
+// 👤 Admin emails — only these emails can write
+// ====================================================================
+const ADMIN_EMAILS = [
+  "rohitchaudhary201200@gmail.com", // ← change to YOUR admin email(s)
+];
+
+// ====================================================================
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const postsCol = collection(db, "gov_posts");
+
+// State
+let posts = [];
+let editingId = null;
+
+// Elements
+const $ = (id) => document.getElementById(id);
+const authView = $("authView");
+const mainView = $("mainView");
+const userBar = $("userBar");
+
+// ---------- AUTH ----------
+onAuthStateChanged(auth, (user) => {
+  if (user && ADMIN_EMAILS.includes(user.email)) {
+    authView.classList.add("hidden");
+    mainView.classList.remove("hidden");
+    userBar.classList.remove("hidden");
+    $("userEmail").textContent = user.email;
+    loadPosts();
+  } else {
+    if (user) {
+      // signed in but not an admin
+      signOut(auth);
+      showAuthError("This account is not authorized.");
+    }
+    authView.classList.remove("hidden");
+    mainView.classList.add("hidden");
+    userBar.classList.add("hidden");
+  }
+});
+
+$("signInBtn").onclick = async () => {
+  const email = $("authEmail").value.trim();
+  const password = $("authPassword").value;
+  if (!email || !password) return showAuthError("Enter email and password.");
+  if (!ADMIN_EMAILS.includes(email)) return showAuthError("This account is not authorized.");
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (e) {
+    showAuthError(e.message.replace("Firebase: ", ""));
+  }
+};
+$("signOutBtn").onclick = () => signOut(auth);
+
+function showAuthError(msg) {
+  const el = $("authError");
+  el.textContent = msg;
+  el.style.display = "block";
+}
+
+// ---------- LOAD ----------
+async function loadPosts() {
+  try {
+    const snap = await getDocs(query(postsCol, orderBy("last_updated", "desc")));
+    posts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderTable();
+  } catch (e) {
+    console.error(e);
+    toast("Failed to load: " + e.message, "error");
+  }
+}
+
+// ---------- RENDER ----------
+function renderStats() {
+  $("statTotal").textContent = posts.length;
+  $("statCentral").textContent = posts.filter(p => p.scope === "Central").length;
+  $("statGujarat").textContent = posts.filter(p => p.scope === "Gujarat").length;
+  $("statActive").textContent = posts.filter(p => {
+    const s = p.current_cycle?.status;
+    return s && s !== "no_announcement" && s !== "exam_completed" && s !== "result_out";
+  }).length;
+}
+
+function renderTable() {
+  const q = $("searchInput").value.trim().toLowerCase();
+  const scope = $("filterScope").value;
+  const dept = $("filterDept").value;
+  const status = $("filterStatus").value;
+
+  const filtered = posts.filter(p => {
+    if (q && !p.name?.toLowerCase().includes(q) && !p.full_name?.toLowerCase().includes(q)) return false;
+    if (scope && p.scope !== scope) return false;
+    if (dept && p.department !== dept) return false;
+    if (status && p.current_cycle?.status !== status) return false;
+    return true;
+  });
+
+  const tbody = $("postRows");
+  tbody.innerHTML = "";
+  if (filtered.length === 0) {
+    $("emptyState").classList.remove("hidden");
+    return;
+  }
+  $("emptyState").classList.add("hidden");
+
+  filtered.forEach(p => {
+    const tr = document.createElement("tr");
+    const status = p.current_cycle?.status || "no_announcement";
+    const updated = p.last_updated?.toDate ? p.last_updated.toDate() : null;
+    tr.innerHTML = `
+      <td class="name">${escape(p.name || "—")}</td>
+      <td>
+        <span class="scope-tag">${escape(p.scope || "?")}</span>
+        <span class="mono" style="color: var(--text-dim); font-size: 11px; margin-left: 6px">${escape(p.department || "")}</span>
+      </td>
+      <td><span class="pill s-${status}">${statusLabel(status)}</span></td>
+      <td class="dim mono" style="font-size: 11px">${updated ? formatDate(updated) : "—"}</td>
+      <td class="actions">
+        <button class="icon ghost" data-edit="${p.id}">Edit</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll("[data-edit]").forEach(b => {
+    b.onclick = () => openModal(b.dataset.edit);
+  });
+}
+
+function statusLabel(s) {
+  return s.replace(/_/g, " ");
+}
+
+function formatDate(d) {
+  return d.toLocaleString("en-IN", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+}
+
+function escape(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+["searchInput", "filterScope", "filterDept", "filterStatus"].forEach(id => {
+  $(id).addEventListener("input", renderTable);
+  $(id).addEventListener("change", renderTable);
+});
+
+// ---------- MODAL ----------
+$("newBtn").onclick = () => openModal(null);
+$("modalClose").onclick = closeModal;
+$("cancelBtn").onclick = closeModal;
+$("modal").addEventListener("click", (e) => {
+  if (e.target.id === "modal") closeModal();
+});
+
+function openModal(id) {
+  editingId = id;
+  $("modalTitle").textContent = id ? "Edit post" : "New post";
+  $("deleteBtn").classList.toggle("hidden", !id);
+
+  // Reset
+  const form = $("postForm");
+  form.reset();
+
+  if (id) {
+    const p = posts.find(x => x.id === id);
+    if (!p) return;
+    $("f_name").value = p.name || "";
+    $("f_full_name").value = p.full_name || "";
+    $("f_scope").value = p.scope || "Central";
+    $("f_department").value = p.department || "Other";
+    $("f_desc_en").value = p.description_en || "";
+    $("f_desc_hi").value = p.description_hi || "";
+    $("f_min_age").value = p.eligibility?.min_age ?? "";
+    $("f_max_age").value = p.eligibility?.max_age ?? "";
+    $("f_qualification").value = p.eligibility?.qualification || "";
+    $("f_stages").value = (p.selection_stages || []).join(", ");
+    $("f_website").value = p.official_website || "";
+    const c = p.current_cycle || {};
+    $("f_status").value = c.status || "no_announcement";
+    $("f_notification_date").value = c.notification_date || "";
+    $("f_form_start").value = c.form_start_date || "";
+    $("f_form_end").value = c.form_end_date || "";
+    $("f_exam_date").value = c.exam_date || "";
+    $("f_result_date").value = c.result_date || "";
+    $("f_pdf").value = c.notification_pdf_url || "";
+    $("f_apply").value = c.apply_link || "";
+    $("f_notes_en").value = c.notes_en || "";
+    $("f_notes_hi").value = c.notes_hi || "";
+  }
+
+  $("modal").classList.add("open");
+}
+
+function closeModal() {
+  $("modal").classList.remove("open");
+  editingId = null;
+}
+
+function collectForm() {
+  const stages = $("f_stages").value
+    .split(",")
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  return {
+    name: $("f_name").value.trim(),
+    full_name: $("f_full_name").value.trim(),
+    scope: $("f_scope").value,
+    department: $("f_department").value,
+    description_en: $("f_desc_en").value.trim(),
+    description_hi: $("f_desc_hi").value.trim(),
+    eligibility: {
+      min_age: numOrNull($("f_min_age").value),
+      max_age: numOrNull($("f_max_age").value),
+      qualification: $("f_qualification").value.trim(),
+    },
+    selection_stages: stages,
+    official_website: $("f_website").value.trim(),
+    current_cycle: {
+      status: $("f_status").value,
+      notification_date: $("f_notification_date").value || null,
+      form_start_date: $("f_form_start").value || null,
+      form_end_date: $("f_form_end").value || null,
+      exam_date: $("f_exam_date").value || null,
+      result_date: $("f_result_date").value || null,
+      notification_pdf_url: $("f_pdf").value.trim(),
+      apply_link: $("f_apply").value.trim(),
+      notes_en: $("f_notes_en").value.trim(),
+      notes_hi: $("f_notes_hi").value.trim(),
+    },
+    last_updated: serverTimestamp(),
+  };
+}
+function numOrNull(v) { return v === "" ? null : Number(v); }
+
+$("saveBtn").onclick = async () => {
+  const data = collectForm();
+  if (!data.name) return toast("Name is required", "error");
+  try {
+    if (editingId) {
+      await updateDoc(doc(db, "gov_posts", editingId), data);
+      toast("Updated · " + data.name, "success");
+    } else {
+      data.created_at = serverTimestamp();
+      await addDoc(postsCol, data);
+      toast("Created · " + data.name, "success");
+    }
+    closeModal();
+    loadPosts();
+  } catch (e) {
+    console.error(e);
+    toast("Save failed: " + e.message, "error");
+  }
+};
+
+$("deleteBtn").onclick = async () => {
+  if (!editingId) return;
+  const p = posts.find(x => x.id === editingId);
+  if (!confirm(`Delete "${p?.name}"? This cannot be undone.`)) return;
+  try {
+    await deleteDoc(doc(db, "gov_posts", editingId));
+    toast("Deleted", "success");
+    closeModal();
+    loadPosts();
+  } catch (e) {
+    toast("Delete failed: " + e.message, "error");
+  }
+};
+
+// ---------- TOAST ----------
+let toastTimer = null;
+function toast(msg, type = "success") {
+  const t = $("toast");
+  t.textContent = msg;
+  t.className = "toast show " + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+}
+
+</script>
+</body>
+</html>
