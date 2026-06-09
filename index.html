@@ -1,220 +1,870 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yuva Admin Panel</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
-  <style>
-    :root{--primary:#4F46E5;--primary-dark:#3730A3;--primary-light:#818CF8;--accent:#FF6B35;--accent-light:#FF9A6B;--bg:#F1F5F9;--card:#FFF;--text:#0F172A;--text-sec:#64748B;--text-light:#94A3B8;--border:#E2E8F0;--success:#10B981;--warning:#F59E0B;--error:#EF4444;--radius:14px;--shadow:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.04)}*{margin:0;padding:0;box-sizing:border-box}body{font-family:'DM Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Yuva Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #4F46E5;
+    --primary-dark: #3730A3;
+    --primary-light: #818CF8;
+    --accent: #FF6B35;
+    --accent-light: #FF9A6B;
+    --bg: #F1F5F9;
+    --card: #FFFFFF;
+    --text: #0F172A;
+    --text-sec: #64748B;
+    --text-light: #94A3B8;
+    --border: #E2E8F0;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --error: #EF4444;
+    --radius: 14px;
+    --shadow: 0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.04);
 
-    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary-dark),#1E1B4B,#0F172A);position:relative;overflow:hidden}
-    .login-screen::before{content:'';position:absolute;top:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(255,107,53,.15),transparent 70%);border-radius:50%}
-    .login-screen::after{content:'';position:absolute;bottom:-150px;left:-150px;width:400px;height:400px;background:radial-gradient(circle,rgba(129,140,248,.2),transparent 70%);border-radius:50%}
-    .login-card{background:rgba(255,255,255,.05);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.1);border-radius:24px;padding:48px 40px;width:420px;text-align:center;position:relative;z-index:2;animation:fadeUp .6s ease}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-    .login-logo{width:80px;height:80px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:40px;margin:0 auto 24px;box-shadow:0 8px 32px rgba(255,107,53,.35)}
-    .login-card h1{color:#fff;font-size:28px;font-weight:800;margin-bottom:6px}
-    .login-card p{color:rgba(255,255,255,.5);font-size:14px;margin-bottom:32px}
-    .login-field{position:relative;margin-bottom:16px;text-align:left}
-    .login-field label{display:block;color:rgba(255,255,255,.6);font-size:12px;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.8px}
-    .login-field input{width:100%;padding:14px 16px 14px 46px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.12);border-radius:12px;font-family:inherit;font-size:15px;color:#fff;outline:none;transition:all .2s}
-    .login-field input::placeholder{color:rgba(255,255,255,.3)}
-    .login-field input:focus{border-color:var(--accent);background:rgba(255,255,255,.12);box-shadow:0 0 0 3px rgba(255,107,53,.15)}
-    .login-field .field-icon{position:absolute;bottom:14px;left:16px;font-size:18px;opacity:.5}
-    .login-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border:none;border-radius:12px;color:#fff;font-family:inherit;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px;transition:all .2s;box-shadow:0 4px 16px rgba(255,107,53,.35)}
-    .login-btn:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(255,107,53,.45)}
-    .login-error{display:none;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#FCA5A5;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;margin-bottom:16px;animation:shake .4s ease}
-    @keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
-    .login-error.show{display:block}
-    .login-footer{margin-top:24px;color:rgba(255,255,255,.3);font-size:12px}
-    .password-toggle{position:absolute;bottom:14px;right:16px;background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:16px}
-    .password-toggle:hover{color:rgba(255,255,255,.7)}
+    /* Cycle status palette */
+    --s-none: #94A3B8;
+    --s-notification: #F59E0B;
+    --s-form-open: #10B981;
+    --s-form-closed: #6366F1;
+    --s-admit: #06B6D4;
+    --s-exam: #FF6B35;
+    --s-completed: #A855F7;
+    --s-result: #14B8A6;
+  }
 
-    .admin-app{display:none}.admin-app.show{display:block}.login-screen.hide{display:none}
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
 
-    .sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;background:linear-gradient(180deg,var(--primary-dark),#1E1B4B);padding:28px 20px;display:flex;flex-direction:column;z-index:100}
-    .sidebar-logo{display:flex;align-items:center;gap:12px;margin-bottom:40px}
-    .sidebar-logo .icon{width:42px;height:42px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 4px 16px rgba(255,107,53,.35)}
-    .sidebar-logo span{color:#fff;font-size:22px;font-weight:800}.sidebar-logo small{display:block;color:rgba(255,255,255,.5);font-size:11px;font-weight:500}
-    .sidebar nav a{display:flex;align-items:center;gap:12px;padding:12px 16px;color:rgba(255,255,255,.65);text-decoration:none;border-radius:10px;font-weight:500;font-size:14px;margin-bottom:4px;transition:all .2s}
-    .sidebar nav a:hover,.sidebar nav a.active{background:rgba(255,255,255,.12);color:#fff}.sidebar nav a.active{background:rgba(255,255,255,.18)}
-    .sidebar-footer{margin-top:auto;padding:14px;background:rgba(255,255,255,.08);border-radius:12px}
-    .sidebar-footer .admin-info{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-    .sidebar-footer .admin-avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent-light));border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px}
-    .sidebar-footer .admin-name{color:rgba(255,255,255,.9);font-size:13px;font-weight:700}
-    .sidebar-footer .admin-role{color:rgba(255,255,255,.45);font-size:11px}
-    .logout-btn{width:100%;padding:8px;background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.2);color:#FCA5A5;border-radius:8px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
-    .logout-btn:hover{background:rgba(239,68,68,.25)}
+  /* ═══════════════════════════════════════════════════════════
+     LOGIN SCREEN
+     ═══════════════════════════════════════════════════════════ */
+  .login-screen {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--primary-dark), #1E1B4B, #0F172A);
+    position: relative; overflow: hidden;
+  }
+  .login-screen::before {
+    content: ''; position: absolute;
+    top: -200px; right: -200px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(255,107,53,.15), transparent 70%);
+    border-radius: 50%;
+  }
+  .login-screen::after {
+    content: ''; position: absolute;
+    bottom: -150px; left: -150px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(129,140,248,.2), transparent 70%);
+    border-radius: 50%;
+  }
+  .login-card {
+    background: rgba(255,255,255,.05);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 420px;
+    text-align: center;
+    position: relative; z-index: 2;
+    animation: fadeUp .6s ease;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .login-logo {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    border-radius: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 40px; margin: 0 auto 24px;
+    box-shadow: 0 8px 32px rgba(255,107,53,.35);
+  }
+  .login-card h1 { color: #fff; font-size: 28px; font-weight: 800; margin-bottom: 6px; }
+  .login-card .sub { color: rgba(255,255,255,.5); font-size: 14px; margin-bottom: 32px; }
+  .login-field { position: relative; margin-bottom: 16px; text-align: left; }
+  .login-field label {
+    display: block; color: rgba(255,255,255,.6);
+    font-size: 12px; font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: .8px;
+  }
+  .login-field input {
+    width: 100%;
+    padding: 14px 16px 14px 46px;
+    background: rgba(255,255,255,.08);
+    border: 1.5px solid rgba(255,255,255,.12);
+    border-radius: 12px;
+    font-family: inherit; font-size: 15px;
+    color: #fff;
+    outline: none;
+    transition: all .2s;
+  }
+  .login-field input::placeholder { color: rgba(255,255,255,.3); }
+  .login-field input:focus {
+    border-color: var(--accent);
+    background: rgba(255,255,255,.12);
+    box-shadow: 0 0 0 3px rgba(255,107,53,.15);
+  }
+  .login-field .field-icon {
+    position: absolute; bottom: 14px; left: 16px;
+    font-size: 18px; opacity: .5;
+  }
+  .login-btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    border: none; border-radius: 12px;
+    color: #fff;
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    cursor: pointer;
+    margin-top: 8px;
+    transition: all .2s;
+    box-shadow: 0 4px 16px rgba(255,107,53,.35);
+  }
+  .login-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(255,107,53,.45); }
+  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+  .login-error {
+    display: none;
+    background: rgba(239,68,68,.15);
+    border: 1px solid rgba(239,68,68,.3);
+    color: #FCA5A5;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 13px; font-weight: 600;
+    margin-bottom: 16px;
+    animation: shake .4s ease;
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+  .login-error.show { display: block; }
+  .login-footer { margin-top: 24px; color: rgba(255,255,255,.3); font-size: 12px; }
 
-    .main{margin-left:260px;padding:28px 32px;min-height:100vh}
-    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px}
-    .page-header h1{font-size:26px;font-weight:800}.page-header p{color:var(--text-sec);font-size:14px;margin-top:2px}
+  .admin-app { display: none; }
+  .admin-app.show { display: block; }
+  .login-screen.hide { display: none; }
 
-    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
-    .btn-primary{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(79,70,229,.3)}.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
-    .btn-accent{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(255,107,53,.3)}.btn-accent:hover{background:#E85D2A}
-    .btn-outline{background:#fff;color:var(--text);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--primary);color:var(--primary)}
+  /* ═══════════════════════════════════════════════════════════
+     SIDEBAR
+     ═══════════════════════════════════════════════════════════ */
+  .sidebar {
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 260px;
+    background: linear-gradient(180deg, var(--primary-dark), #1E1B4B);
+    padding: 28px 20px;
+    display: flex; flex-direction: column;
+    z-index: 100;
+  }
+  .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+  .sidebar-logo .icon {
+    width: 42px; height: 42px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 16px rgba(255,107,53,.35);
+  }
+  .sidebar-logo span { color: #fff; font-size: 22px; font-weight: 800; }
+  .sidebar-logo small { display: block; color: rgba(255,255,255,.5); font-size: 11px; font-weight: 500; }
+  .sidebar nav a {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px;
+    color: rgba(255,255,255,.65);
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: 500; font-size: 14px;
+    margin-bottom: 4px;
+    transition: all .2s;
+    cursor: pointer;
+  }
+  .sidebar nav a:hover, .sidebar nav a.active { background: rgba(255,255,255,.12); color: #fff; }
+  .sidebar nav a.active { background: rgba(255,255,255,.18); }
+  .sidebar-footer { margin-top: auto; padding: 14px; background: rgba(255,255,255,.08); border-radius: 12px; }
+  .sidebar-footer .admin-info { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .sidebar-footer .admin-avatar {
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 800; font-size: 14px;
+  }
+  .sidebar-footer .admin-name { color: rgba(255,255,255,.9); font-size: 13px; font-weight: 700; }
+  .sidebar-footer .admin-role { color: rgba(255,255,255,.45); font-size: 11px; }
+  .logout-btn {
+    width: 100%; padding: 8px;
+    background: rgba(239,68,68,.15);
+    border: 1px solid rgba(239,68,68,.2);
+    color: #FCA5A5;
+    border-radius: 8px;
+    font-family: inherit; font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .logout-btn:hover { background: rgba(239,68,68,.25); }
 
-    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
-    .stat-card{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);border:1px solid var(--border)}
-    .stat-card .label{font-size:12px;color:var(--text-sec);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-    .stat-card .value{font-size:28px;font-weight:800;margin-top:6px}
+  /* ═══════════════════════════════════════════════════════════
+     MAIN AREA
+     ═══════════════════════════════════════════════════════════ */
+  .main { margin-left: 260px; padding: 28px 32px; min-height: 100vh; }
+  .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; gap: 16px; flex-wrap: wrap; }
+  .page-header h1 { font-size: 26px; font-weight: 800; }
+  .page-header p { color: var(--text-sec); font-size: 14px; margin-top: 2px; }
 
-    .table-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--border);overflow:hidden}
-    .table-header{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--border)}
-    .table-header h2{font-size:16px;font-weight:700}
-    .search-box{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg);border-radius:8px;border:1px solid var(--border);width:260px}
-    .search-box input{border:none;background:none;font-family:inherit;font-size:13px;color:var(--text);outline:none;width:100%}
-    .filter-tabs{display:flex;gap:6px;padding:12px 20px;border-bottom:1px solid var(--border);overflow-x:auto}
-    .filter-tab{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;border:1.5px solid var(--border);background:#fff;color:var(--text-sec);cursor:pointer;transition:all .2s;white-space:nowrap}
-    .filter-tab:hover,.filter-tab.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+  /* Buttons */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 20px;
+    border: none; border-radius: 10px;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-primary { background: var(--primary); color: #fff; box-shadow: 0 2px 8px rgba(79,70,229,.3); }
+  .btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+  .btn-accent { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(255,107,53,.3); }
+  .btn-accent:hover { background: #E85D2A; }
+  .btn-outline { background: #fff; color: var(--text); border: 1.5px solid var(--border); }
+  .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-danger { background: transparent; color: var(--error); border: 1.5px solid var(--error); }
+  .btn-danger:hover { background: rgba(239,68,68,.08); }
 
-    table{width:100%;border-collapse:collapse}
-    thead th{text-align:left;padding:12px 16px;font-size:11px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:.8px;background:#F8FAFC;border-bottom:1px solid var(--border)}
-    tbody td{padding:14px 16px;font-size:13px;border-bottom:1px solid #F1F5F9;vertical-align:middle}
-    tbody tr:hover{background:#FAFBFF}
-    .job-title-cell{display:flex;align-items:center;gap:12px}
-    .job-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-    .job-title-text strong{font-size:13px;font-weight:700;color:var(--text);display:block}
-    .job-title-text small{font-size:11px;color:var(--text-sec)}
-    .category-badge{display:inline-block;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700}
-    .status-dot{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
-    .status-dot::before{content:'';width:7px;height:7px;border-radius:50%}
-    .status-active{color:var(--success)}.status-active::before{background:var(--success)}
-    .status-closed{color:var(--error)}.status-closed::before{background:var(--error)}
-    .actions-cell{display:flex;gap:6px}
-    .icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:all .2s}
-    .icon-btn:hover{background:var(--bg);border-color:var(--primary)}
-    .icon-btn.danger:hover{background:#FEF2F2;border-color:var(--error)}
-    .empty-state{text-align:center;padding:60px 20px;color:var(--text-sec)}.empty-state .emoji{font-size:48px;margin-bottom:12px}
+  /* Stats */
+  .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .stat-card {
+    background: var(--card); border-radius: var(--radius);
+    padding: 18px; box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+  }
+  .stat-card .label {
+    font-size: 12px; color: var(--text-sec);
+    font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .stat-card .value { font-size: 28px; font-weight: 800; margin-top: 6px; }
 
-    .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.5);backdrop-filter:blur(4px);z-index:200;align-items:center;justify-content:center}
-    .modal-overlay.show{display:flex}
-    .modal{background:var(--card);border-radius:18px;width:640px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:modalIn .3s ease}
-    @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
-    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid var(--border)}
-    .modal-header h2{font-size:18px;font-weight:800}
-    .modal-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--bg);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s}
-    .modal-close:hover{background:var(--error);color:#fff}
-    .modal-body{padding:24px}
-    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .form-group{display:flex;flex-direction:column}.form-group.full{grid-column:1/-1}
-    .form-group label{font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-    .form-group input,.form-group select,.form-group textarea{padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;color:var(--text);outline:none;transition:border .2s;background:#fff}
-    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(79,70,229,.1)}
-    .form-group textarea{min-height:80px;resize:vertical}
-    .modal-footer{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:1px solid var(--border)}
+  /* Table card */
+  .table-card {
+    background: var(--card); border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 20px; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 12px;
+  }
+  .table-header h2 { font-size: 16px; font-weight: 700; }
+  .table-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .search-box {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 14px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    width: 260px;
+  }
+  .search-box input {
+    border: none; background: none;
+    font-family: inherit; font-size: 13px;
+    color: var(--text); outline: none;
+    width: 100%;
+  }
+  .select-small {
+    padding: 8px 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit; font-size: 13px;
+    color: var(--text); outline: none;
+    cursor: pointer;
+  }
+  .filter-tabs {
+    display: flex; gap: 6px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .filter-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px; font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: #fff; color: var(--text-sec);
+    cursor: pointer; transition: all .2s;
+    white-space: nowrap;
+  }
+  .filter-tab:hover, .filter-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-    .toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;border-radius:12px;color:#fff;font-weight:600;font-size:14px;box-shadow:0 4px 20px rgba(0,0,0,.15);z-index:300;animation:toastIn .3s ease,toastOut .3s ease 2.7s;display:flex;align-items:center;gap:8px}
-    @keyframes toastIn{from{opacity:0;transform:translateY(20px)}}@keyframes toastOut{to{opacity:0;transform:translateY(20px)}}
-    .toast-success{background:var(--success)}.toast-error{background:var(--error)}
-    .spinner{width:20px;height:20px;border:3px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .loading-overlay{display:flex;align-items:center;justify-content:center;padding:60px;color:var(--text-sec);gap:12px}
-    .loading-overlay .spinner{border-color:var(--border);border-top-color:var(--primary)}
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left; padding: 12px 16px;
+    font-size: 11px; font-weight: 700; color: var(--text-sec);
+    text-transform: uppercase; letter-spacing: .8px;
+    background: #F8FAFC;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid #F1F5F9; vertical-align: middle; }
+  tbody tr:hover { background: #FAFBFF; }
+  .post-name-cell { display: flex; align-items: center; gap: 12px; }
+  .post-icon {
+    width: 38px; height: 38px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .post-name-text strong { font-size: 13px; font-weight: 700; color: var(--text); display: block; }
+  .post-name-text small { font-size: 11px; color: var(--text-sec); }
+  .dept-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 11px; font-weight: 700;
+  }
+  .scope-badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 10px; font-weight: 700;
+    background: #F1F5F9; color: var(--text-sec);
+    margin-left: 6px;
+  }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .3px;
+  }
+  .status-pill::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .status-no_announcement { color: var(--s-none); background: rgba(148,163,184,.12); }
+  .status-notification_out { color: var(--s-notification); background: rgba(245,166,35,.12); }
+  .status-form_open { color: var(--s-form-open); background: rgba(16,185,129,.12); }
+  .status-form_closed { color: var(--s-form-closed); background: rgba(99,102,241,.12); }
+  .status-admit_card_out { color: var(--s-admit); background: rgba(6,182,212,.12); }
+  .status-exam_scheduled { color: var(--s-exam); background: rgba(255,107,53,.12); }
+  .status-exam_completed { color: var(--s-completed); background: rgba(168,85,247,.12); }
+  .status-result_out { color: var(--s-result); background: rgba(20,184,166,.12); }
+  .actions-cell { display: flex; gap: 6px; }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all .2s;
+  }
+  .icon-btn:hover { background: var(--bg); border-color: var(--primary); }
+  .icon-btn.danger:hover { background: #FEF2F2; border-color: var(--error); }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-sec); }
+  .empty-state .emoji { font-size: 48px; margin-bottom: 12px; }
+  .empty-state h3 { margin-bottom: 6px; }
 
-    .cat-govt{background:#EEF2FF;color:#4338CA}.cat-bank{background:#FFFBEB;color:#B45309}.cat-psu{background:#ECFDF5;color:#047857}
-    .cat-railway{background:#FDF2F8;color:#BE185D}.cat-police{background:#EFF6FF;color:#1D4ED8}.cat-defence{background:#FEF2F2;color:#B91C1C}.cat-teaching{background:#FFFBEB;color:#92400E}
-    .icon-govt{background:#EEF2FF}.icon-bank{background:#FFFBEB}.icon-psu{background:#ECFDF5}.icon-railway{background:#FDF2F8}.icon-police{background:#EFF6FF}.icon-defence{background:#FEF2F2}.icon-teaching{background:#FFFBEB}
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(15,23,42,.5);
+    backdrop-filter: blur(4px);
+    z-index: 200;
+    align-items: flex-start; justify-content: center;
+    padding: 40px 20px;
+    overflow-y: auto;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: var(--card);
+    border-radius: 18px;
+    width: 720px; max-width: 100%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    animation: modalIn .3s ease;
+  }
+  @keyframes modalIn {
+    from { opacity: 0; transform: scale(.95) translateY(10px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  .modal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; background: var(--card);
+    border-radius: 18px 18px 0 0;
+    z-index: 2;
+  }
+  .modal-header h2 { font-size: 18px; font-weight: 800; }
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px; border: none;
+    background: var(--bg);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all .2s;
+  }
+  .modal-close:hover { background: var(--error); color: #fff; }
+  .modal-body { padding: 24px; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label {
+    font-size: 11px; font-weight: 700; color: var(--text-sec);
+    margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: .5px;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: inherit; font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border .2s;
+    background: #fff;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.1); }
+  .form-group textarea { min-height: 80px; resize: vertical; font-family: inherit; }
+  .form-group .hint { font-size: 11px; color: var(--text-light); margin-top: 4px; }
+  .form-section {
+    grid-column: 1 / -1;
+    display: flex; align-items: center; gap: 10px;
+    margin-top: 8px; margin-bottom: -4px;
+    font-size: 11px; font-weight: 700;
+    color: var(--primary);
+    text-transform: uppercase; letter-spacing: 1px;
+  }
+  .form-section::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .modal-footer {
+    display: flex; justify-content: space-between; gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    position: sticky; bottom: 0; background: var(--card);
+    border-radius: 0 0 18px 18px;
+  }
+  .modal-footer .right { display: flex; gap: 10px; margin-left: auto; }
 
-    @media(max-width:900px){.sidebar{display:none}.main{margin-left:0;padding:16px}.stats-row{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:1fr}.modal{width:95%;margin:0 10px}.login-card{width:90%;padding:32px 24px}}
-  </style>
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    padding: 14px 20px;
+    border-radius: 12px;
+    color: #fff; font-weight: 600; font-size: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.15);
+    z-index: 300;
+    animation: toastIn .3s ease;
+    display: flex; align-items: center; gap: 8px;
+  }
+  @keyframes toastIn { from { opacity: 0; transform: translateY(20px); } }
+  .toast-success { background: var(--success); }
+  .toast-error { background: var(--error); }
+
+  /* Spinner */
+  .spinner {
+    width: 20px; height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin .8s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-overlay {
+    display: flex; align-items: center; justify-content: center;
+    padding: 60px;
+    color: var(--text-sec);
+    gap: 12px;
+  }
+  .loading-overlay .spinner { border-color: var(--border); border-top-color: var(--primary); }
+
+  /* Department color classes */
+  .dept-UPSC { background: #EEF2FF; color: #4338CA; }
+  .dept-SSC { background: #EEF2FF; color: #4F46E5; }
+  .dept-RRB { background: #FDF2F8; color: #BE185D; }
+  .dept-Banking { background: #FFFBEB; color: #B45309; }
+  .dept-Defence { background: #FEF2F2; color: #B91C1C; }
+  .dept-Police { background: #EFF6FF; color: #1D4ED8; }
+  .dept-Teaching { background: #FFFBEB; color: #92400E; }
+  .dept-GPSC { background: #ECFDF5; color: #047857; }
+  .dept-PSU { background: #ECFDF5; color: #047857; }
+  .dept-State { background: #F5F3FF; color: #6D28D9; }
+  .dept-Other { background: #F1F5F9; color: #475569; }
+  .icon-bg-UPSC { background: #EEF2FF; }
+  .icon-bg-SSC { background: #EEF2FF; }
+  .icon-bg-RRB { background: #FDF2F8; }
+  .icon-bg-Banking { background: #FFFBEB; }
+  .icon-bg-Defence { background: #FEF2F2; }
+  .icon-bg-Police { background: #EFF6FF; }
+  .icon-bg-Teaching { background: #FFFBEB; }
+  .icon-bg-GPSC { background: #ECFDF5; }
+  .icon-bg-PSU { background: #ECFDF5; }
+  .icon-bg-State { background: #F5F3FF; }
+  .icon-bg-Other { background: #F1F5F9; }
+
+  .hidden { display: none !important; }
+
+  /* Section views (hidden by default, shown when nav clicked) */
+  .section-view { display: none; }
+  .section-view.active { display: block; }
+
+  /* Mobile */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; padding: 16px; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
+    .modal { width: 100%; }
+    .login-card { width: 90%; padding: 32px 24px; }
+    .search-box { width: 100%; }
+  }
+</style>
 </head>
 <body>
 
+<!-- ════════════════════════════════════════════════
+     LOGIN SCREEN
+     ════════════════════════════════════════════════ -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
     <div class="login-logo">🚀</div>
     <h1>Yuva Admin</h1>
-    <p>Sign in to manage your app</p>
-    <div class="login-error" id="loginError">❌ Invalid ID or password</div>
+    <div class="sub">Sign in to manage your app</div>
+    <div class="login-error" id="loginError">Invalid email or password</div>
     <div class="login-field">
-      <label>Admin ID</label><span class="field-icon">👤</span>
-      <input type="text" id="loginId" placeholder="Enter admin ID" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
+      <label>Email</label>
+      <span class="field-icon">✉️</span>
+      <input type="email" id="loginEmail" placeholder="admin@example.com" autocomplete="username">
     </div>
     <div class="login-field">
-      <label>Password</label><span class="field-icon">🔒</span>
-      <input type="password" id="loginPass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()">
-      <button class="password-toggle" onclick="togglePass()" id="passToggle">👁</button>
+      <label>Password</label>
+      <span class="field-icon">🔒</span>
+      <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
     </div>
-    <button class="login-btn" onclick="doLogin()">Sign In →</button>
+    <button class="login-btn" id="loginBtn">Sign In →</button>
     <div class="login-footer">🔒 Secured Admin Panel • Yuva v1.0</div>
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════
+     ADMIN APP
+     ════════════════════════════════════════════════ -->
 <div class="admin-app" id="adminApp">
+
+  <!-- SIDEBAR -->
   <div class="sidebar">
-    <div class="sidebar-logo"><div class="icon">🚀</div><div><span>Yuva</span><small>Admin Panel</small></div></div>
+    <div class="sidebar-logo">
+      <div class="icon">🚀</div>
+      <div><span>Yuva</span><small>Admin Panel</small></div>
+    </div>
     <nav>
-      <a href="#" class="active" id="navJobs" onclick="showJobsPage()">📋 Jobs Management</a>
-      <a href="#" onclick="alert('Users section coming soon!')">👥 Users</a>
-      <a href="#" id="navAffairs" onclick="showAffairsPage()">📰 Current Affairs</a>
-      <a href="#" onclick="alert('Analytics coming soon!')">📊 Analytics</a>
-      <a href="#" onclick="alert('Settings coming soon!')">⚙️ Settings</a>
+      <a class="active" id="navGovPosts" data-section="gov-posts">📋 Government Posts</a>
+      <a id="navAffairs" data-section="affairs">📰 Current Affairs</a>
+      <a id="navUsers">👥 Users</a>
+      <a id="navAnalytics">📊 Analytics</a>
+      <a id="navSettings">⚙️ Settings</a>
     </nav>
     <div class="sidebar-footer">
-      <div class="admin-info"><div class="admin-avatar" id="adminAvatar">R</div><div><div class="admin-name" id="adminName">Rohit</div><div class="admin-role">Super Admin</div></div></div>
-      <button class="logout-btn" onclick="doLogout()">🚪 Log Out</button>
+      <div class="admin-info">
+        <div class="admin-avatar" id="adminAvatar">R</div>
+        <div>
+          <div class="admin-name" id="adminName">Admin</div>
+          <div class="admin-role">Super Admin</div>
+        </div>
+      </div>
+      <button class="logout-btn" id="logoutBtn">🚪 Log Out</button>
     </div>
   </div>
 
   <div class="main">
-    <div class="page-header"><div><h1>Jobs Management</h1><p>Add, edit and manage all job listings</p></div>
-      <button class="btn btn-accent" onclick="openAddModal()">➕ Add New Job</button></div>
-    <div class="stats-row">
-      <div class="stat-card"><div class="label">Total Jobs</div><div class="value" id="statTotal" style="color:var(--primary)">-</div></div>
-      <div class="stat-card"><div class="label">Active Jobs</div><div class="value" id="statActive" style="color:var(--success)">-</div></div>
-      <div class="stat-card"><div class="label">Categories</div><div class="value" id="statCategories" style="color:var(--accent)">-</div></div>
-      <div class="stat-card"><div class="label">Total Vacancies</div><div class="value" id="statVacancies" style="color:var(--warning)">-</div></div>
-    </div>
-    <div class="table-card">
-      <div class="table-header"><h2>All Jobs</h2><div class="search-box"><span>🔍</span><input type="text" id="searchInput" placeholder="Search jobs..." oninput="renderJobs()"></div></div>
-      <div class="filter-tabs" id="filterTabs"></div>
-      <div id="jobsTable"><div class="loading-overlay"><div class="spinner"></div><span>Loading jobs from Firebase...</span></div></div>
-    </div>
-  </div>
-</div>
 
-<div class="modal-overlay" id="jobModal">
-  <div class="modal">
-    <div class="modal-header"><h2 id="modalTitle">Add New Job</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
-    <div class="modal-body">
-      <div class="form-grid">
-        <div class="form-group full"><label>Job Title *</label><input type="text" id="f_title" placeholder="e.g. GPSC Class 1-2 Officer"></div>
-        <div class="form-group full"><label>Department *</label><input type="text" id="f_department" placeholder="e.g. Gujarat Public Service Commission"></div>
-        <div class="form-group"><label>Category *</label><select id="f_category"><option value="Govt">🏛 Government</option><option value="Bank">🏦 Bank</option><option value="PSU">⚡ PSU</option><option value="Railway">🚂 Railway</option><option value="Police">👮 Police</option><option value="Defence">🎖 Defence</option><option value="Teaching">📚 Teaching</option></select></div>
-        <div class="form-group"><label>Vacancies *</label><input type="number" id="f_vacancies" placeholder="450" min="1"></div>
-        <div class="form-group"><label>Qualification</label><input type="text" id="f_qualification" placeholder="Graduation in any discipline"></div>
-        <div class="form-group"><label>Salary</label><input type="text" id="f_salary" placeholder="₹56,100 - ₹1,77,500"></div>
-        <div class="form-group"><label>Location</label><input type="text" id="f_location" placeholder="Gujarat / All India"></div>
-        <div class="form-group"><label>Last Date to Apply *</label><input type="date" id="f_lastDate"></div>
-        <div class="form-group full"><label>Description</label><textarea id="f_description" placeholder="Brief description of the job, selection process, etc."></textarea></div>
-        <div class="form-group full"><label>Apply Link</label><input type="url" id="f_applyLink" placeholder="https://example.gov.in"></div>
-        <div class="form-group full"><label>Tags (comma separated)</label><input type="text" id="f_tags" placeholder="Graduate, Gujarat, Officer"></div>
-        <div class="form-group"><label>Status</label><select id="f_active"><option value="true">✅ Active</option><option value="false">❌ Inactive</option></select></div>
+    <!-- ════════════════════════════════════════════════
+         GOVERNMENT POSTS SECTION
+         ════════════════════════════════════════════════ -->
+    <div class="section-view active" id="sectionGovPosts">
+      <div class="page-header">
+        <div>
+          <h1>Government Posts</h1>
+          <p>Manage every government recruitment track and its cycle status</p>
+        </div>
+        <button class="btn btn-accent" id="newPostBtn">➕ Add New Post</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="label">Total Posts</div><div class="value" id="statTotal" style="color: var(--primary)">—</div></div>
+        <div class="stat-card"><div class="label">Central</div><div class="value" id="statCentral" style="color: var(--success)">—</div></div>
+        <div class="stat-card"><div class="label">Gujarat</div><div class="value" id="statGujarat" style="color: var(--accent)">—</div></div>
+        <div class="stat-card"><div class="label">Active Cycles</div><div class="value" id="statActive" style="color: var(--warning)">—</div></div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h2>All Posts</h2>
+          <div class="table-tools">
+            <select class="select-small" id="filterScope">
+              <option value="">All Scopes</option>
+              <option value="Central">Central</option>
+              <option value="Gujarat">Gujarat</option>
+            </select>
+            <select class="select-small" id="filterStatus">
+              <option value="">All Statuses</option>
+              <option value="no_announcement">No announcement</option>
+              <option value="notification_out">Notification out</option>
+              <option value="form_open">Form open</option>
+              <option value="form_closed">Form closed</option>
+              <option value="admit_card_out">Admit card out</option>
+              <option value="exam_scheduled">Exam scheduled</option>
+              <option value="exam_completed">Exam completed</option>
+              <option value="result_out">Result out</option>
+            </select>
+            <div class="search-box">
+              <span>🔍</span>
+              <input type="text" id="searchInput" placeholder="Search posts…">
+            </div>
+          </div>
+        </div>
+        <div class="filter-tabs" id="filterTabs"></div>
+        <div id="postsTable">
+          <div class="loading-overlay"><div class="spinner"></div><span>Loading posts…</span></div>
+        </div>
       </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="saveBtn" onclick="saveJob()">💾 Save Job</button></div>
+
+    <!-- ════════════════════════════════════════════════
+         CURRENT AFFAIRS SECTION
+         ════════════════════════════════════════════════ -->
+    <div class="section-view" id="sectionAffairs">
+      <div class="page-header">
+        <div>
+          <h1>Current Affairs</h1>
+          <p>Add, view and delete current affairs articles</p>
+        </div>
+        <button class="btn btn-accent" id="newAffairBtn">➕ Add Article</button>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header"><h2>All Articles</h2></div>
+        <div id="affairsTable">
+          <div class="loading-overlay"><div class="spinner"></div><span>Loading articles…</span></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
+<!-- ════════════════════════════════════════════════
+     POST MODAL
+     ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="postModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="postModalTitle">New Post</h2>
+      <button class="modal-close" id="postModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+
+        <div class="form-section">// Basics</div>
+        <div class="form-group">
+          <label>Short Name *</label>
+          <input type="text" id="f_name" placeholder="SSC CGL">
+        </div>
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="f_full_name" placeholder="Staff Selection Commission – Combined Graduate Level">
+        </div>
+        <div class="form-group">
+          <label>Scope *</label>
+          <select id="f_scope">
+            <option value="Central">Central</option>
+            <option value="Gujarat">Gujarat</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Department *</label>
+          <select id="f_department">
+            <option value="UPSC">UPSC</option>
+            <option value="SSC">SSC</option>
+            <option value="RRB">RRB</option>
+            <option value="Banking">Banking</option>
+            <option value="Defence">Defence</option>
+            <option value="Police">Police</option>
+            <option value="Teaching">Teaching</option>
+            <option value="GPSC">GPSC</option>
+            <option value="State">State</option>
+            <option value="PSU">PSU</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-section">// Description (Bilingual)</div>
+        <div class="form-group full">
+          <label>Description (English)</label>
+          <textarea id="f_desc_en" rows="3" placeholder="What this exam/post is about…"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Description (हिन्दी)</label>
+          <textarea id="f_desc_hi" rows="3" placeholder="यह परीक्षा/पद किस बारे में है…"></textarea>
+        </div>
+
+        <div class="form-section">// Eligibility</div>
+        <div class="form-group">
+          <label>Min Age</label>
+          <input type="number" id="f_min_age" min="0" max="100" placeholder="18">
+        </div>
+        <div class="form-group">
+          <label>Max Age</label>
+          <input type="number" id="f_max_age" min="0" max="100" placeholder="32">
+        </div>
+        <div class="form-group full">
+          <label>Qualification</label>
+          <input type="text" id="f_qualification" placeholder="Bachelor's degree from a recognized university">
+        </div>
+
+        <div class="form-section">// Selection &amp; Links</div>
+        <div class="form-group full">
+          <label>Selection Stages (in order)</label>
+          <input type="text" id="f_stages" placeholder="Tier 1, Tier 2, Skill Test, Document Verification">
+          <div class="hint">Comma-separated. Order matters. e.g. for Police: "Physical Test, Written, Document Verification"</div>
+        </div>
+        <div class="form-group full">
+          <label>Official Website</label>
+          <input type="url" id="f_website" placeholder="https://ssc.nic.in">
+        </div>
+
+        <div class="form-section">// Current Cycle</div>
+        <div class="form-group">
+          <label>Status *</label>
+          <select id="f_status">
+            <option value="no_announcement">No announcement</option>
+            <option value="notification_out">Notification out</option>
+            <option value="form_open">Form open</option>
+            <option value="form_closed">Form closed</option>
+            <option value="admit_card_out">Admit card out</option>
+            <option value="exam_scheduled">Exam scheduled</option>
+            <option value="exam_completed">Exam completed</option>
+            <option value="result_out">Result out</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Notification Date</label>
+          <input type="date" id="f_notification_date">
+        </div>
+        <div class="form-group">
+          <label>Form Opens</label>
+          <input type="date" id="f_form_start">
+        </div>
+        <div class="form-group">
+          <label>Form Closes</label>
+          <input type="date" id="f_form_end">
+        </div>
+        <div class="form-group">
+          <label>Exam Date</label>
+          <input type="date" id="f_exam_date">
+        </div>
+        <div class="form-group">
+          <label>Result Date</label>
+          <input type="date" id="f_result_date">
+        </div>
+        <div class="form-group full">
+          <label>Notification PDF URL</label>
+          <input type="url" id="f_pdf" placeholder="https://…">
+        </div>
+        <div class="form-group full">
+          <label>Apply Portal Link</label>
+          <input type="url" id="f_apply" placeholder="https://…">
+        </div>
+        <div class="form-group full">
+          <label>Notes (English)</label>
+          <textarea id="f_notes_en" rows="2"></textarea>
+        </div>
+        <div class="form-group full">
+          <label>Notes (हिन्दी)</label>
+          <textarea id="f_notes_hi" rows="2"></textarea>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger hidden" id="deletePostBtn">🗑 Delete</button>
+      <div class="right">
+        <button class="btn btn-outline" id="postModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="savePostBtn">💾 Save Post</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     AFFAIR MODAL
+     ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="affairModal">
+  <div class="modal" style="width: 560px;">
+    <div class="modal-header">
+      <h2>New Article</h2>
+      <button class="modal-close" id="affairModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Title *</label>
+          <input type="text" id="a_title" placeholder="Article headline">
+        </div>
+        <div class="form-group full">
+          <label>Summary *</label>
+          <textarea id="a_summary" rows="3" placeholder="2-3 sentence summary"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="a_category">
+            <option value="National">National</option>
+            <option value="International">International</option>
+            <option value="Sports">Sports</option>
+            <option value="Economy">Economy</option>
+            <option value="Science">Science</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Source</label>
+          <input type="text" id="a_source" placeholder="Yuva Admin" value="Yuva Admin">
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="right">
+        <button class="btn btn-outline" id="affairModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="saveAffairBtn">💾 Save Article</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
+     FIREBASE + LOGIC
+     ════════════════════════════════════════════════ -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <script>
 // ╔══════════════════════════════════════════════════════════╗
-// ║  🔐 ADMIN CREDENTIALS — CHANGE THESE TO YOUR OWN!      ║
-// ╚══════════════════════════════════════════════════════════╝
-const ADMIN_ACCOUNTS = [
-  { id: 'rohit', password: 'yuva@2026', name: 'Rohit' },
-  // Add more: { id: 'admin2', password: 'pass123', name: 'Admin 2' },
-];
-
-// ╔══════════════════════════════════════════════════════════╗
-// ║  🔥 FIREBASE CONFIG — REPLACE WITH YOUR OWN!            ║
+// ║  🔥 FIREBASE CONFIG                                       ║
 // ╚══════════════════════════════════════════════════════════╝
 const firebaseConfig = {
-  apiKey: "AIzaSyB1epfQkG5uSyMLkotsWTUUHPHAnzYETlI",
+  apiKey: "AIzaSyB1epfQkG5uSyMlKotsWTUUHPHAnzYETlI",
   authDomain: "yuva-8b75f.firebaseapp.com",
   projectId: "yuva-8b75f",
   storageBucket: "yuva-8b75f.firebasestorage.app",
@@ -222,183 +872,448 @@ const firebaseConfig = {
   appId: "1:503611804041:web:64597796b508a13d9d7958"
 };
 
+// ╔══════════════════════════════════════════════════════════╗
+// ║  👤 AUTHORIZED ADMIN EMAILS                              ║
+// ╚══════════════════════════════════════════════════════════╝
+const ADMIN_EMAILS = [
+  "rohitchaudhary201200@gmail.com",
+];
+
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentAdmin=null,allJobs=[],activeFilter='All',editingId=null;
-const CATEGORIES=['All','Govt','Bank','PSU','Railway','Police','Defence','Teaching'];
-const CAT_EMOJI={Govt:'🏛',Bank:'🏦',PSU:'⚡',Railway:'🚂',Police:'👮',Defence:'🎖',Teaching:'📚'};
+// ─── STATE ───
+let currentUser = null;
+let allPosts = [];
+let activeDeptFilter = 'All';
+let editingPostId = null;
 
-function doLogin(){
-  const id=document.getElementById('loginId').value.trim().toLowerCase();
-  const pass=document.getElementById('loginPass').value;
-  const err=document.getElementById('loginError');
-  const admin=ADMIN_ACCOUNTS.find(a=>a.id.toLowerCase()===id&&a.password===pass);
-  if(admin){currentAdmin=admin;err.classList.remove('show');sessionStorage.setItem('yuva_admin',JSON.stringify(admin));
-    document.getElementById('loginScreen').classList.add('hide');document.getElementById('adminApp').classList.add('show');
-    document.getElementById('adminAvatar').textContent=admin.name[0].toUpperCase();document.getElementById('adminName').textContent=admin.name;loadJobs();
-  }else{err.classList.add('show');document.getElementById('loginPass').value='';document.getElementById('loginPass').focus();}
-}
-function doLogout(){if(!confirm('Log out of admin panel?'))return;sessionStorage.removeItem('yuva_admin');currentAdmin=null;
-  document.getElementById('loginScreen').classList.remove('hide');document.getElementById('adminApp').classList.remove('show');
-  document.getElementById('loginId').value='';document.getElementById('loginPass').value='';}
-function togglePass(){const i=document.getElementById('loginPass'),b=document.getElementById('passToggle');if(i.type==='password'){i.type='text';b.textContent='🙈'}else{i.type='password';b.textContent='👁'}}
-function checkSession(){const s=sessionStorage.getItem('yuva_admin');if(s){try{currentAdmin=JSON.parse(s);document.getElementById('loginScreen').classList.add('hide');document.getElementById('adminApp').classList.add('show');document.getElementById('adminAvatar').textContent=currentAdmin.name[0].toUpperCase();document.getElementById('adminName').textContent=currentAdmin.name;loadJobs()}catch(e){sessionStorage.removeItem('yuva_admin')}}}
+const DEPARTMENTS = ['All', 'UPSC', 'SSC', 'RRB', 'Banking', 'Defence', 'Police', 'Teaching', 'GPSC', 'State', 'PSU', 'Other'];
+const DEPT_EMOJI = {
+  UPSC: '🏛', SSC: '🏛', RRB: '🚂', Banking: '🏦', Defence: '🎖',
+  Police: '👮', Teaching: '📚', GPSC: '🏛', State: '🏛', PSU: '⚡', Other: '💼'
+};
 
-async function loadJobs(){try{const s=await db.collection('jobs').orderBy('postedDate','desc').get();allJobs=s.docs.map(d=>({id:d.id,...d.data()}))}catch(e){try{const s=await db.collection('jobs').get();allJobs=s.docs.map(d=>({id:d.id,...d.data()}))}catch(e2){showToast('Failed: '+e2.message,'error');allJobs=[]}}updateStats();renderFilters();renderJobs()}
-function updateStats(){const a=allJobs.filter(j=>j.active!==false),c=new Set(allJobs.map(j=>j.category).filter(Boolean)),v=allJobs.reduce((s,j)=>s+(parseInt(j.vacancies)||0),0);
-  document.getElementById('statTotal').textContent=allJobs.length;document.getElementById('statActive').textContent=a.length;document.getElementById('statCategories').textContent=c.size;document.getElementById('statVacancies').textContent=v.toLocaleString()}
-function renderFilters(){document.getElementById('filterTabs').innerHTML=CATEGORIES.map(c=>`<div class="filter-tab ${activeFilter===c?'active':''}" onclick="setFilter('${c}')">${c==='All'?'📋 All':(CAT_EMOJI[c]||'')+' '+c}</div>`).join('')}
-function setFilter(c){activeFilter=c;renderFilters();renderJobs()}
+const $ = (id) => document.getElementById(id);
 
-function renderJobs(){
-  const search=document.getElementById('searchInput').value.toLowerCase();let f=allJobs;
-  if(activeFilter!=='All')f=f.filter(j=>j.category===activeFilter);
-  if(search)f=f.filter(j=>(j.title||'').toLowerCase().includes(search)||(j.department||'').toLowerCase().includes(search)||(j.location||'').toLowerCase().includes(search));
-  if(!f.length){document.getElementById('jobsTable').innerHTML='<div class="empty-state"><div class="emoji">📭</div><h3>No jobs found</h3><p>Click "Add New Job" to create one!</p></div>';return}
-  const rows=f.map(j=>{const cc='cat-'+(j.category||'').toLowerCase(),ic='icon-'+(j.category||'').toLowerCase(),em=CAT_EMOJI[j.category]||'💼',ac=j.active!==false;
-    let ld='-',dl='-';if(j.lastDate){const d=j.lastDate.toDate?j.lastDate.toDate():new Date(j.lastDate);ld=d.toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'});const dd=Math.ceil((d-new Date())/(864e5));dl=dd>=0?dd+'d left':'Closed'}
-    return`<tr><td><div class="job-title-cell"><div class="job-icon ${ic}">${em}</div><div class="job-title-text"><strong>${j.title||'Untitled'}</strong><small>${j.department||'-'}</small></div></div></td>
-    <td><span class="category-badge ${cc}">${j.category||'-'}</span></td><td>${j.vacancies||'-'}</td>
-    <td>${ld}<br><small style="color:${dl==='Closed'?'var(--error)':'var(--text-light)'}">${dl}</small></td>
-    <td>${j.location||'-'}</td><td><span class="status-dot ${ac?'status-active':'status-closed'}">${ac?'Active':'Closed'}</span></td>
-    <td><div class="actions-cell"><button class="icon-btn" title="Edit" onclick="editJob('${j.id}')">✏️</button><button class="icon-btn danger" title="Delete" onclick="deleteJob('${j.id}','${(j.title||'').replace(/'/g,"\\'")}')">🗑</button></div></td></tr>`}).join('');
-  document.getElementById('jobsTable').innerHTML=`<table><thead><tr><th>Job Title</th><th>Category</th><th>Vacancies</th><th>Last Date</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>`}
+// ═════════════════════ AUTH ═════════════════════
+auth.onAuthStateChanged(user => {
+  if (user && ADMIN_EMAILS.includes(user.email)) {
+    currentUser = user;
+    $('loginScreen').classList.add('hide');
+    $('adminApp').classList.add('show');
+    $('adminName').textContent = user.email.split('@')[0];
+    $('adminAvatar').textContent = user.email[0].toUpperCase();
+    loadPosts();
+  } else {
+    if (user) {
+      auth.signOut();
+      showLoginError('This account is not authorized as admin.');
+    }
+    $('loginScreen').classList.remove('hide');
+    $('adminApp').classList.remove('show');
+  }
+});
 
-function openAddModal(){editingId=null;document.getElementById('modalTitle').textContent='➕ Add New Job';document.getElementById('saveBtn').textContent='💾 Save Job';clearForm();const d=new Date();d.setDate(d.getDate()+30);document.getElementById('f_lastDate').value=d.toISOString().split('T')[0];document.getElementById('jobModal').classList.add('show')}
-function editJob(id){const j=allJobs.find(x=>x.id===id);if(!j)return;editingId=id;document.getElementById('modalTitle').textContent='✏️ Edit Job';document.getElementById('saveBtn').textContent='💾 Update Job';
-  document.getElementById('f_title').value=j.title||'';document.getElementById('f_department').value=j.department||'';document.getElementById('f_category').value=j.category||'Govt';
-  document.getElementById('f_vacancies').value=j.vacancies||'';document.getElementById('f_qualification').value=j.qualification||'';document.getElementById('f_salary').value=j.salary||'';
-  document.getElementById('f_location').value=j.location||'';document.getElementById('f_description').value=j.description||'';document.getElementById('f_applyLink').value=j.applyLink||'';
-  document.getElementById('f_tags').value=(j.tags||[]).join(', ');document.getElementById('f_active').value=j.active!==false?'true':'false';
-  if(j.lastDate){const d=j.lastDate.toDate?j.lastDate.toDate():new Date(j.lastDate);document.getElementById('f_lastDate').value=d.toISOString().split('T')[0]}
-  document.getElementById('jobModal').classList.add('show')}
-function closeModal(){document.getElementById('jobModal').classList.remove('show');editingId=null}
-function clearForm(){['f_title','f_department','f_vacancies','f_qualification','f_salary','f_location','f_description','f_applyLink','f_tags','f_lastDate'].forEach(i=>{document.getElementById(i).value=''});document.getElementById('f_category').value='Govt';document.getElementById('f_active').value='true'}
+$('loginBtn').onclick = async () => {
+  const email = $('loginEmail').value.trim();
+  const pass = $('loginPass').value;
+  const btn = $('loginBtn');
+  if (!email || !pass) return showLoginError('Enter email and password');
+  if (!ADMIN_EMAILS.includes(email)) return showLoginError('This account is not authorized');
 
-async function saveJob(){const t=document.getElementById('f_title').value.trim(),d=document.getElementById('f_department').value.trim();if(!t){alert('Please enter a job title!');return}if(!d){alert('Please enter a department!');return}
-  const data={title:t,department:d,category:document.getElementById('f_category').value,vacancies:parseInt(document.getElementById('f_vacancies').value)||0,
-    qualification:document.getElementById('f_qualification').value.trim(),salary:document.getElementById('f_salary').value.trim(),
-    location:document.getElementById('f_location').value.trim()||'All India',description:document.getElementById('f_description').value.trim(),
-    applyLink:document.getElementById('f_applyLink').value.trim(),tags:document.getElementById('f_tags').value.split(',').map(t=>t.trim()).filter(Boolean),
-    active:document.getElementById('f_active').value==='true',lastDate:document.getElementById('f_lastDate').value?new Date(document.getElementById('f_lastDate').value):new Date(Date.now()+30*864e5)};
-  if(!editingId)data.postedDate=new Date();const btn=document.getElementById('saveBtn');btn.innerHTML='<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Saving...';btn.disabled=true;
-  try{if(editingId){await db.collection('jobs').doc(editingId).update(data);showToast('Job updated!','success')}else{await db.collection('jobs').add(data);showToast('New job added!','success')}closeModal();await loadJobs()}catch(e){showToast('Error: '+e.message,'error')}
-  btn.innerHTML=editingId?'💾 Update Job':'💾 Save Job';btn.disabled=false}
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Signing in…';
+  try {
+    await auth.signInWithEmailAndPassword(email, pass);
+    $('loginError').classList.remove('show');
+  } catch (e) {
+    showLoginError(e.message.replace('Firebase: ', ''));
+  }
+  btn.disabled = false;
+  btn.innerHTML = 'Sign In →';
+};
 
-async function deleteJob(id,title){if(!confirm(`Delete "${title}"?\n\nThis cannot be undone.`))return;try{await db.collection('jobs').doc(id).delete();showToast('Job deleted','success');await loadJobs()}catch(e){showToast('Delete failed: '+e.message,'error')}}
-function showToast(msg,type='success'){const t=document.createElement('div');t.className=`toast toast-${type}`;t.innerHTML=`${type==='success'?'✓':'✕'} ${msg}`;document.body.appendChild(t);setTimeout(()=>t.remove(),3000)}
-checkSession();
+['loginEmail', 'loginPass'].forEach(id => {
+  $(id).addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') $('loginBtn').click();
+  });
+});
 
-  // ─── NAVIGATION ───
-function showJobsPage() {
-  document.getElementById('navJobs').classList.add('active');
-  document.getElementById('navAffairs').classList.remove('active');
-  document.querySelector('.page-header').innerHTML = '<div><h1>Jobs Management</h1><p>Add, edit and manage all job listings</p></div><button class="btn btn-accent" onclick="openAddModal()">➕ Add New Job</button>';
-  document.querySelector('.stats-row').style.display = 'grid';
-  document.getElementById('filterTabs').style.display = 'flex';
-  document.querySelector('.table-header').innerHTML = '<h2>All Jobs</h2><div class="search-box"><span>🔍</span><input type="text" id="searchInput" placeholder="Search jobs..." oninput="renderJobs()"></div>';
-  loadJobs();
+$('logoutBtn').onclick = () => {
+  if (!confirm('Log out of admin panel?')) return;
+  auth.signOut();
+};
+
+function showLoginError(msg) {
+  const el = $('loginError');
+  el.textContent = '❌ ' + msg;
+  el.classList.add('show');
 }
 
-function showAffairsPage() {
-  document.getElementById('navJobs').classList.remove('active');
-  document.getElementById('navAffairs').classList.add('active');
-  showAffairs();
+// ═════════════════════ NAVIGATION ═════════════════════
+document.querySelectorAll('.sidebar nav a').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    const section = link.dataset.section;
+    if (!section) {
+      showToast('Coming soon!', 'success');
+      return;
+    }
+    document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+    link.classList.add('active');
+    document.querySelectorAll('.section-view').forEach(s => s.classList.remove('active'));
+    if (section === 'gov-posts') {
+      $('sectionGovPosts').classList.add('active');
+      loadPosts();
+    } else if (section === 'affairs') {
+      $('sectionAffairs').classList.add('active');
+      loadAffairs();
+    }
+  });
+});
+
+// ═════════════════════ GOV POSTS ═════════════════════
+async function loadPosts() {
+  try {
+    const snap = await db.collection('gov_posts').orderBy('last_updated', 'desc').get();
+    allPosts = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderStats();
+    renderDeptFilters();
+    renderPostsTable();
+  } catch (e) {
+    console.error(e);
+    showToast('Failed to load: ' + e.message, 'error');
+    $('postsTable').innerHTML = '<div class="empty-state"><div class="emoji">❌</div><h3>Error</h3><p>' + e.message + '</p></div>';
+  }
 }
-  
-// ─── CURRENT AFFAIRS MANAGEMENT ───
-async function showAffairs() {
-  document.getElementById('jobsTable').innerHTML = '<div class="loading-overlay"><div class="spinner"></div><span>Loading current affairs...</span></div>';
-  document.querySelector('.page-header h1').textContent = 'Current Affairs';
-  document.querySelector('.page-header p').textContent = 'Add, view and delete current affairs articles';
-  document.querySelector('.page-header button').outerHTML = '<button class="btn btn-accent" onclick="addAffair()">➕ Add Article</button>';
-  
-  // Hide stats and filters
-  document.querySelector('.stats-row').style.display = 'none';
-  document.getElementById('filterTabs').style.display = 'none';
-  document.querySelector('.table-header').innerHTML = '<h2>All Articles</h2><button class="btn btn-outline btn-sm" onclick="showJobsPage()">← Back to Jobs</button>';
+
+function renderStats() {
+  $('statTotal').textContent = allPosts.length;
+  $('statCentral').textContent = allPosts.filter(p => p.scope === 'Central').length;
+  $('statGujarat').textContent = allPosts.filter(p => p.scope === 'Gujarat').length;
+  $('statActive').textContent = allPosts.filter(p => {
+    const s = p.current_cycle?.status;
+    return s && s !== 'no_announcement' && s !== 'exam_completed' && s !== 'result_out';
+  }).length;
+}
+
+function renderDeptFilters() {
+  $('filterTabs').innerHTML = DEPARTMENTS.map(d => {
+    const emoji = d === 'All' ? '📋' : (DEPT_EMOJI[d] || '');
+    return `<div class="filter-tab ${activeDeptFilter === d ? 'active' : ''}" data-dept="${d}">${emoji} ${d}</div>`;
+  }).join('');
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.onclick = () => {
+      activeDeptFilter = tab.dataset.dept;
+      renderDeptFilters();
+      renderPostsTable();
+    };
+  });
+}
+
+function renderPostsTable() {
+  const search = $('searchInput').value.toLowerCase();
+  const scope = $('filterScope').value;
+  const status = $('filterStatus').value;
+
+  let filtered = allPosts;
+  if (activeDeptFilter !== 'All') filtered = filtered.filter(p => p.department === activeDeptFilter);
+  if (scope) filtered = filtered.filter(p => p.scope === scope);
+  if (status) filtered = filtered.filter(p => p.current_cycle?.status === status);
+  if (search) {
+    filtered = filtered.filter(p =>
+      (p.name || '').toLowerCase().includes(search) ||
+      (p.full_name || '').toLowerCase().includes(search) ||
+      (p.department || '').toLowerCase().includes(search)
+    );
+  }
+
+  if (!filtered.length) {
+    $('postsTable').innerHTML = '<div class="empty-state"><div class="emoji">📭</div><h3>No posts found</h3><p>Click "Add New Post" to create one!</p></div>';
+    return;
+  }
+
+  const rows = filtered.map(p => {
+    const dept = p.department || 'Other';
+    const emoji = DEPT_EMOJI[dept] || '💼';
+    const status = p.current_cycle?.status || 'no_announcement';
+    const statusLabel = status.replace(/_/g, ' ');
+    const updated = p.last_updated?.toDate ? p.last_updated.toDate() : null;
+    const updatedStr = updated ? updated.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+
+    return `<tr>
+      <td>
+        <div class="post-name-cell">
+          <div class="post-icon icon-bg-${dept}">${emoji}</div>
+          <div class="post-name-text">
+            <strong>${escape(p.name || 'Untitled')}</strong>
+            <small>${escape(p.full_name || dept)}</small>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span class="dept-badge dept-${dept}">${dept}</span>
+        <span class="scope-badge">${p.scope || '?'}</span>
+      </td>
+      <td><span class="status-pill status-${status}">${statusLabel}</span></td>
+      <td style="color: var(--text-sec); font-size: 12px;">${updatedStr}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="icon-btn" title="Edit" data-edit="${p.id}">✏️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('postsTable').innerHTML = `<table>
+    <thead><tr>
+      <th>Post Name</th><th>Dept / Scope</th><th>Cycle Status</th><th>Last Updated</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+
+  document.querySelectorAll('[data-edit]').forEach(b => {
+    b.onclick = () => openPostModal(b.dataset.edit);
+  });
+}
+
+// Filter listeners
+['searchInput', 'filterScope', 'filterStatus'].forEach(id => {
+  $(id).addEventListener('input', renderPostsTable);
+  $(id).addEventListener('change', renderPostsTable);
+});
+
+// ─── POST MODAL ───
+$('newPostBtn').onclick = () => openPostModal(null);
+$('postModalClose').onclick = () => closePostModal();
+$('postModalCancel').onclick = () => closePostModal();
+$('postModal').addEventListener('click', (e) => {
+  if (e.target.id === 'postModal') closePostModal();
+});
+
+function openPostModal(id) {
+  editingPostId = id;
+  $('postModalTitle').textContent = id ? '✏️ Edit Post' : '➕ New Post';
+  $('savePostBtn').textContent = id ? '💾 Update Post' : '💾 Save Post';
+  $('deletePostBtn').classList.toggle('hidden', !id);
+
+  if (id) {
+    const p = allPosts.find(x => x.id === id);
+    if (!p) return;
+    $('f_name').value = p.name || '';
+    $('f_full_name').value = p.full_name || '';
+    $('f_scope').value = p.scope || 'Central';
+    $('f_department').value = p.department || 'Other';
+    $('f_desc_en').value = p.description_en || '';
+    $('f_desc_hi').value = p.description_hi || '';
+    $('f_min_age').value = p.eligibility?.min_age ?? '';
+    $('f_max_age').value = p.eligibility?.max_age ?? '';
+    $('f_qualification').value = p.eligibility?.qualification || '';
+    $('f_stages').value = (p.selection_stages || []).join(', ');
+    $('f_website').value = p.official_website || '';
+    const c = p.current_cycle || {};
+    $('f_status').value = c.status || 'no_announcement';
+    $('f_notification_date').value = c.notification_date || '';
+    $('f_form_start').value = c.form_start_date || '';
+    $('f_form_end').value = c.form_end_date || '';
+    $('f_exam_date').value = c.exam_date || '';
+    $('f_result_date').value = c.result_date || '';
+    $('f_pdf').value = c.notification_pdf_url || '';
+    $('f_apply').value = c.apply_link || '';
+    $('f_notes_en').value = c.notes_en || '';
+    $('f_notes_hi').value = c.notes_hi || '';
+  } else {
+    ['f_name','f_full_name','f_desc_en','f_desc_hi','f_min_age','f_max_age',
+     'f_qualification','f_stages','f_website','f_notification_date','f_form_start',
+     'f_form_end','f_exam_date','f_result_date','f_pdf','f_apply','f_notes_en','f_notes_hi']
+      .forEach(field => $(field).value = '');
+    $('f_scope').value = 'Central';
+    $('f_department').value = 'UPSC';
+    $('f_status').value = 'no_announcement';
+  }
+
+  $('postModal').classList.add('show');
+}
+
+function closePostModal() {
+  $('postModal').classList.remove('show');
+  editingPostId = null;
+}
+
+$('savePostBtn').onclick = async () => {
+  const name = $('f_name').value.trim();
+  if (!name) { showToast('Name is required', 'error'); return; }
+
+  const stages = $('f_stages').value.split(',').map(s => s.trim()).filter(Boolean);
+  const data = {
+    name,
+    full_name: $('f_full_name').value.trim(),
+    scope: $('f_scope').value,
+    department: $('f_department').value,
+    description_en: $('f_desc_en').value.trim(),
+    description_hi: $('f_desc_hi').value.trim(),
+    eligibility: {
+      min_age: $('f_min_age').value ? Number($('f_min_age').value) : null,
+      max_age: $('f_max_age').value ? Number($('f_max_age').value) : null,
+      qualification: $('f_qualification').value.trim(),
+    },
+    selection_stages: stages,
+    official_website: $('f_website').value.trim(),
+    current_cycle: {
+      status: $('f_status').value,
+      notification_date: $('f_notification_date').value || null,
+      form_start_date: $('f_form_start').value || null,
+      form_end_date: $('f_form_end').value || null,
+      exam_date: $('f_exam_date').value || null,
+      result_date: $('f_result_date').value || null,
+      notification_pdf_url: $('f_pdf').value.trim(),
+      apply_link: $('f_apply').value.trim(),
+      notes_en: $('f_notes_en').value.trim(),
+      notes_hi: $('f_notes_hi').value.trim(),
+    },
+    last_updated: firebase.firestore.FieldValue.serverTimestamp(),
+  };
+
+  const btn = $('savePostBtn');
+  btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Saving…';
+  btn.disabled = true;
+  try {
+    if (editingPostId) {
+      await db.collection('gov_posts').doc(editingPostId).update(data);
+      showToast('Updated: ' + name, 'success');
+    } else {
+      data.created_at = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('gov_posts').add(data);
+      showToast('Created: ' + name, 'success');
+    }
+    closePostModal();
+    loadPosts();
+  } catch (e) {
+    showToast('Save failed: ' + e.message, 'error');
+  }
+  btn.innerHTML = editingPostId ? '💾 Update Post' : '💾 Save Post';
+  btn.disabled = false;
+};
+
+$('deletePostBtn').onclick = async () => {
+  if (!editingPostId) return;
+  const p = allPosts.find(x => x.id === editingPostId);
+  if (!confirm(`Delete "${p?.name}"?\n\nThis cannot be undone.`)) return;
+  try {
+    await db.collection('gov_posts').doc(editingPostId).delete();
+    showToast('Deleted', 'success');
+    closePostModal();
+    loadPosts();
+  } catch (e) {
+    showToast('Delete failed: ' + e.message, 'error');
+  }
+};
+
+// ═════════════════════ CURRENT AFFAIRS ═════════════════════
+async function loadAffairs() {
+  $('affairsTable').innerHTML = '<div class="loading-overlay"><div class="spinner"></div><span>Loading articles…</span></div>';
   try {
     let snap;
     try {
       snap = await db.collection('current_affairs').orderBy('date', 'desc').get();
-    } catch(e) {
+    } catch (e) {
       snap = await db.collection('current_affairs').get();
     }
-
     if (snap.empty) {
-      document.getElementById('jobsTable').innerHTML = '<div class="empty-state"><div class="emoji">📰</div><h3>No articles yet</h3><p>Click "Add Article" to create one!</p></div>';
+      $('affairsTable').innerHTML = '<div class="empty-state"><div class="emoji">📰</div><h3>No articles yet</h3><p>Click "Add Article" to create one</p></div>';
       return;
     }
-
     const catColors = {
-      'National': '#10B981', 'International': '#3B82F6',
-      'Economy': '#F59E0B', 'Science': '#6366F1', 'Sports': '#EC4899'
+      National: '#10B981', International: '#3B82F6', Economy: '#F59E0B',
+      Science: '#6366F1', Sports: '#EC4899'
     };
-
     const rows = snap.docs.map(doc => {
       const d = doc.data();
-      const date = d.date && d.date.toDate ? d.date.toDate().toLocaleDateString('en-IN', {day:'numeric',month:'short',year:'numeric'}) : '-';
+      const date = d.date?.toDate ? d.date.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
       const color = catColors[d.category] || '#64748B';
-      const title = (d.title || 'Untitled').replace(/'/g, "\\'");
-
+      const title = escape(d.title || 'Untitled');
       return `<tr>
-        <td style="max-width:300px">
-          <strong style="font-size:13px;color:#0F172A">${d.title || 'Untitled'}</strong><br>
-          <small style="color:#64748B">${(d.summary || '').substring(0, 80)}...</small>
+        <td style="max-width: 300px;">
+          <strong style="font-size: 13px; color: var(--text);">${title}</strong><br>
+          <small style="color: var(--text-sec);">${escape((d.summary || '').substring(0, 80))}…</small>
         </td>
-        <td><span style="background:${color}15;color:${color};padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700">${d.category || '-'}</span></td>
-        <td style="font-size:12px;color:#64748B">${d.source || '-'}</td>
-        <td style="font-size:12px;color:#64748B">${date}</td>
-        <td>
-          <button class="icon-btn danger" title="Delete" onclick="deleteAffair('${doc.id}', '${title}')">🗑</button>
-        </td>
+        <td><span style="background: ${color}15; color: ${color}; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;">${escape(d.category || '—')}</span></td>
+        <td style="font-size: 12px; color: var(--text-sec);">${escape(d.source || '—')}</td>
+        <td style="font-size: 12px; color: var(--text-sec);">${date}</td>
+        <td><button class="icon-btn danger" title="Delete" data-delete-affair="${doc.id}" data-title="${title}">🗑</button></td>
       </tr>`;
     }).join('');
-
-    document.getElementById('jobsTable').innerHTML = `<table>
+    $('affairsTable').innerHTML = `<table>
       <thead><tr><th>Article</th><th>Category</th><th>Source</th><th>Date</th><th>Action</th></tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
-  } catch(e) {
-    document.getElementById('jobsTable').innerHTML = '<div class="empty-state"><div class="emoji">❌</div><h3>Error loading articles</h3><p>' + e.message + '</p></div>';
+    document.querySelectorAll('[data-delete-affair]').forEach(b => {
+      b.onclick = () => deleteAffair(b.dataset.deleteAffair, b.dataset.title);
+    });
+  } catch (e) {
+    $('affairsTable').innerHTML = '<div class="empty-state"><div class="emoji">❌</div><h3>Error</h3><p>' + e.message + '</p></div>';
   }
 }
 
-function addAffair() {
-  const title = prompt('Article Title:');
-  if (!title || !title.trim()) return;
-  const summary = prompt('Summary (2-3 sentences):');
-  if (!summary || !summary.trim()) return;
-  const category = prompt('Category:\n1. National\n2. International\n3. Sports\n4. Economy\n5. Science\n\nType the name:') || 'National';
-  const source = prompt('Source name (e.g. Yuva Admin):') || 'Yuva Admin';
+$('newAffairBtn').onclick = () => {
+  ['a_title', 'a_summary'].forEach(id => $(id).value = '');
+  $('a_category').value = 'National';
+  $('a_source').value = 'Yuva Admin';
+  $('affairModal').classList.add('show');
+};
+$('affairModalClose').onclick = () => $('affairModal').classList.remove('show');
+$('affairModalCancel').onclick = () => $('affairModal').classList.remove('show');
+$('affairModal').addEventListener('click', (e) => {
+  if (e.target.id === 'affairModal') $('affairModal').classList.remove('show');
+});
 
-  db.collection('current_affairs').add({
-    title: title.trim(),
-    summary: summary.trim(),
-    category: category.trim(),
-    source: source.trim(),
-    date: new Date(),
-    readMinutes: Math.max(1, Math.ceil(summary.trim().split(' ').length / 200)),
-    url: '',
-    imageUrl: '',
-  }).then(() => {
-    showToast('Article added!', 'success');
-    showAffairs();
-  }).catch(e => {
+$('saveAffairBtn').onclick = async () => {
+  const title = $('a_title').value.trim();
+  const summary = $('a_summary').value.trim();
+  if (!title || !summary) { showToast('Title and summary required', 'error'); return; }
+  try {
+    await db.collection('current_affairs').add({
+      title,
+      summary,
+      category: $('a_category').value,
+      source: $('a_source').value.trim() || 'Yuva Admin',
+      date: firebase.firestore.FieldValue.serverTimestamp(),
+      readMinutes: Math.max(1, Math.ceil(summary.split(' ').length / 200)),
+      url: '',
+      imageUrl: '',
+    });
+    showToast('Article added', 'success');
+    $('affairModal').classList.remove('show');
+    loadAffairs();
+  } catch (e) {
     showToast('Error: ' + e.message, 'error');
-  });
-}
+  }
+};
 
 async function deleteAffair(id, title) {
   if (!confirm('Delete "' + title + '"?\n\nThis cannot be undone.')) return;
   try {
     await db.collection('current_affairs').doc(id).delete();
     showToast('Article deleted', 'success');
-    showAffairs();
-  } catch(e) {
+    loadAffairs();
+  } catch (e) {
     showToast('Delete failed: ' + e.message, 'error');
   }
+}
+
+// ═════════════════════ HELPERS ═════════════════════
+function showToast(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.innerHTML = `${type === 'success' ? '✓' : '✕'} ${msg}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function escape(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 </script>
 </body>
