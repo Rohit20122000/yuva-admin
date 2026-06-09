@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Yuva Admin Panel</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <style>
   :root {
     --primary: #4F46E5;
@@ -517,6 +518,99 @@
 
   .hidden { display: none !important; }
 
+  /* ─── Category management ─── */
+  .cat-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .cat-row.sortable-ghost { opacity: 0.3; }
+  .cat-row.sortable-chosen { background: var(--card); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .drag-handle {
+    cursor: grab;
+    color: var(--text-light);
+    font-size: 16px;
+    padding: 4px 2px;
+    user-select: none;
+    line-height: 1;
+    letter-spacing: -3px;
+  }
+  .drag-handle:active { cursor: grabbing; }
+  .cat-emoji { font-size: 20px; width: 28px; text-align: center; }
+  .cat-name { flex: 1; font-weight: 600; font-size: 14px; }
+
+  .cat-row-editing {
+    background: #fff;
+    border: 2px solid var(--primary);
+    padding: 16px;
+    display: block;
+  }
+  .cat-edit-top { display: flex; gap: 8px; margin-bottom: 12px; }
+  .cat-name-input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+  }
+  .cat-name-input:focus { border-color: var(--primary); }
+  .cat-emoji-input {
+    width: 60px;
+    padding: 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 18px;
+    text-align: center;
+    outline: none;
+  }
+  .cat-emoji-input:focus { border-color: var(--primary); }
+  .cat-edit-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    justify-content: flex-end;
+  }
+
+  .emoji-picker {
+    max-height: 240px;
+    overflow-y: auto;
+    background: var(--bg);
+    border-radius: 8px;
+    padding: 12px;
+  }
+  .emoji-group-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-sec);
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    margin-bottom: 6px;
+    margin-top: 12px;
+  }
+  .emoji-group-label:first-child { margin-top: 0; }
+  .emoji-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+  .emoji-btn {
+    width: 36px; height: 36px;
+    background: transparent;
+    border: 1.5px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .emoji-btn:hover { background: var(--card); border-color: var(--primary); }
+  .emoji-btn.selected { background: var(--card); border-color: var(--primary); }
+
   /* Section views (hidden by default, shown when nav clicked) */
   .section-view { display: none; }
   .section-view.active { display: block; }
@@ -854,8 +948,7 @@
     </div>
     <div class="modal-body">
       <p style="color: var(--text-sec); font-size: 13px; margin-bottom: 18px; line-height: 1.5;">
-        Default categories are built-in and can't be changed.<br>
-        Your custom categories can be renamed, re-emoji'd, or deleted.
+        Drag the ⋮⋮ handle to reorder. Click ✏️ to rename or change emoji. Categories with no posts can be safely deleted.
       </p>
       <div id="categoriesList"></div>
       <button class="btn btn-accent" id="addCategoryBtnInModal" style="width: 100%; margin-top: 20px; justify-content: center;">
@@ -988,24 +1081,47 @@ document.querySelectorAll('.sidebar nav a').forEach(link => {
 });
 
 // ═════════════════════ CUSTOM DEPARTMENTS ═════════════════════
-let customDepartmentsDocs = []; // [{ id, name, emoji }]
+let customDepartmentsDocs = []; // [{ id, name, emoji, order }]
+let editingCategoryId = null;   // null | docId | '_new'
+let sortableInstance = null;
+
+// Curated emoji picker (Indian government context)
+const EMOJI_GROUPS = {
+  'Government & Admin': ['🏛️','🏢','🏦','🏪','⚖️','📜','🪪','📋','📊','📈','💼','🪙','💰','💳'],
+  'Transport':           ['🚂','🚆','🚇','🚌','✈️','🚁','🚢','⛵','⚓','🛤️','🛣️','🚲','🏎️'],
+  'Defence & Police':    ['👮','🪖','🛡️','🎖️','🏅','🚨','⚔️','🔫'],
+  'Education':           ['📚','📖','✏️','🎓','🏫','📝','✒️','📐','🧑‍🏫','🔖'],
+  'Science & Tech':      ['🔬','🧪','💻','📡','🛰️','🚀','⚛️','🤖','🧬','🧮'],
+  'Medical':             ['⚕️','💊','🩺','🏥','💉','🦷','🧠'],
+  'Energy & Industry':   ['⚡','🔋','⚙️','🔧','🛠️','🏭','🔩','🪛','⛽'],
+  'Misc':                ['🌾','🌳','⛏️','📦','🚪','📞','⏰','🧰','🔑','📺','📮','🛂','🏞️']
+};
 
 async function loadCustomDepartments() {
-  // Reset to defaults each time so deletions also propagate
-  DEPARTMENTS = [...DEFAULT_DEPARTMENTS];
   customDepartmentsDocs = [];
+  DEPARTMENTS = ['All'];
   try {
-    const snap = await db.collection('custom_departments').orderBy('name').get();
+    const snap = await db.collection('custom_departments').orderBy('order').get();
     snap.docs.forEach(d => {
       const data = d.data();
-      if (data.name && !DEPARTMENTS.includes(data.name)) {
+      if (data.name) {
         DEPARTMENTS.push(data.name);
         if (data.emoji) DEPT_EMOJI[data.name] = data.emoji;
-        customDepartmentsDocs.push({ id: d.id, name: data.name, emoji: data.emoji || '' });
+        customDepartmentsDocs.push({
+          id: d.id,
+          name: data.name,
+          emoji: data.emoji || '',
+          order: data.order ?? 999
+        });
       }
     });
+    // Fallback to hardcoded defaults if Firestore is empty
+    if (customDepartmentsDocs.length === 0) {
+      DEPARTMENTS = [...DEFAULT_DEPARTMENTS];
+    }
   } catch (e) {
-    console.warn('Could not load custom departments (Firestore rules may need updating):', e.message);
+    console.warn('Could not load custom departments:', e.message);
+    DEPARTMENTS = [...DEFAULT_DEPARTMENTS];
   }
   populateDeptDropdown();
 }
@@ -1020,107 +1136,194 @@ function populateDeptDropdown() {
   if (current && DEPARTMENTS.includes(current)) sel.value = current;
 }
 
-// ─── ADD NEW ───
-async function addNewCategory() {
-  const name = prompt('New category name (e.g., "Customs", "ISRO", "Coast Guard"):');
-  if (!name || !name.trim()) return;
-  const trimmed = name.trim();
-  if (DEPARTMENTS.some(d => d.toLowerCase() === trimmed.toLowerCase())) {
-    showToast('Category already exists', 'error');
-    return;
-  }
-  const emoji = prompt('Emoji for this category (optional, e.g., 📦, 🚀, ⚓):') || '';
-  try {
-    await db.collection('custom_departments').add({
-      name: trimmed,
-      emoji: emoji.trim(),
-      created_at: firebase.firestore.FieldValue.serverTimestamp(),
-    });
-    showToast('Added: ' + trimmed, 'success');
-    await loadCustomDepartments();
-    renderDeptFilters();
-    if ($('categoriesModal').classList.contains('show')) renderCategoriesList();
-  } catch (e) {
-    showToast('Failed: ' + e.message, 'error');
-  }
-}
-
-// ─── MANAGE MODAL ───
+// ─── MODAL ───
 function openCategoriesModal() {
+  editingCategoryId = null;
   renderCategoriesList();
   $('categoriesModal').classList.add('show');
 }
 
 function renderCategoriesList() {
-  const defaults = DEFAULT_DEPARTMENTS.filter(d => d !== 'All');
-  let html = `
-    <h3 style="font-size:11px;text-transform:uppercase;color:var(--text-sec);letter-spacing:.8px;margin-bottom:10px;">Default categories (locked)</h3>
-    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;">
-      ${defaults.map(d => `<span style="padding:6px 12px;background:var(--bg);border-radius:20px;font-size:12px;color:var(--text-sec);"><span style="margin-right:4px;">${DEPT_EMOJI[d] || '💼'}</span>${d}</span>`).join('')}
-    </div>
-    <h3 style="font-size:11px;text-transform:uppercase;color:var(--text-sec);letter-spacing:.8px;margin-bottom:10px;">Your custom categories (${customDepartmentsDocs.length})</h3>
-  `;
+  const list = $('categoriesList');
+  const addBtn = $('addCategoryBtnInModal');
 
-  if (customDepartmentsDocs.length === 0) {
-    html += `<p style="color:var(--text-light);font-size:13px;padding:16px;background:var(--bg);border-radius:10px;text-align:center;">No custom categories yet.<br>Click the button below to add your first one.</p>`;
-  } else {
-    html += '<div>';
-    customDepartmentsDocs.forEach(c => {
-      html += `
-        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border-radius:10px;margin-bottom:8px;">
-          <span style="font-size:20px;">${c.emoji || '💼'}</span>
-          <span style="flex:1;font-weight:600;font-size:14px;">${escape(c.name)}</span>
-          <button class="icon-btn" data-edit-cat="${c.id}" title="Edit">✏️</button>
-          <button class="icon-btn danger" data-del-cat="${c.id}" data-name="${escape(c.name)}" title="Delete">🗑</button>
-        </div>
-      `;
-    });
-    html += '</div>';
+  // Empty state — show "Set up defaults" button
+  if (customDepartmentsDocs.length === 0 && editingCategoryId !== '_new') {
+    list.innerHTML = `
+      <div style="text-align:center;padding:32px 20px;background:var(--bg);border-radius:12px;">
+        <div style="font-size:40px;margin-bottom:10px;">📋</div>
+        <h3 style="font-size:15px;margin-bottom:6px;">No categories yet</h3>
+        <p style="font-size:13px;color:var(--text-sec);margin-bottom:18px;">Get started with the standard 11 categories, or add your own from scratch.</p>
+        <button class="btn btn-primary" id="seedDefaultsBtn">⚡ Set up Default Categories</button>
+      </div>
+    `;
+    $('seedDefaultsBtn').onclick = seedDefaultCategories;
+    addBtn.style.display = '';
+    return;
   }
 
-  $('categoriesList').innerHTML = html;
-
-  document.querySelectorAll('[data-edit-cat]').forEach(b => {
-    b.onclick = () => editCategory(b.dataset.editCat);
+  // Render rows
+  let html = '<div id="categoriesSortable">';
+  customDepartmentsDocs.forEach(c => {
+    html += (editingCategoryId === c.id) ? renderEditRow(c) : renderNormalRow(c);
   });
-  document.querySelectorAll('[data-del-cat]').forEach(b => {
-    b.onclick = () => deleteCategory(b.dataset.delCat, b.dataset.name);
+  if (editingCategoryId === '_new') {
+    html += renderEditRow(null);
+  }
+  html += '</div>';
+  list.innerHTML = html;
+
+  // Hide "+ Add" button while editing
+  addBtn.style.display = editingCategoryId ? 'none' : '';
+
+  wireRowHandlers();
+  if (!editingCategoryId) initSortable();
+}
+
+function renderNormalRow(c) {
+  return `
+    <div class="cat-row" data-id="${c.id}">
+      <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
+      <span class="cat-emoji">${c.emoji || '💼'}</span>
+      <span class="cat-name">${escape(c.name)}</span>
+      <button class="icon-btn" data-edit="${c.id}" title="Edit">✏️</button>
+      <button class="icon-btn danger" data-del="${c.id}" data-name="${escape(c.name)}" title="Delete">🗑</button>
+    </div>
+  `;
+}
+
+function renderEditRow(c) {
+  const isNew = c === null;
+  const name = isNew ? '' : c.name;
+  const emoji = isNew ? '' : c.emoji;
+  return `
+    <div class="cat-row cat-row-editing">
+      <div class="cat-edit-top">
+        <input type="text" class="cat-name-input" id="editNameInput" placeholder="Category name (e.g. Customs)" value="${escape(name)}" />
+        <input type="text" class="cat-emoji-input" id="editEmojiInput" placeholder="🏛" value="${escape(emoji)}" maxlength="4" />
+      </div>
+      <div class="emoji-picker" id="emojiPicker"></div>
+      <div class="cat-edit-actions">
+        <button class="btn btn-outline" id="cancelEditBtn">Cancel</button>
+        <button class="btn btn-primary" id="saveEditBtn">${isNew ? '＋ Add Category' : '💾 Save Changes'}</button>
+      </div>
+    </div>
+  `;
+}
+
+function wireRowHandlers() {
+  document.querySelectorAll('[data-edit]').forEach(b => {
+    b.onclick = () => { editingCategoryId = b.dataset.edit; renderCategoriesList(); };
+  });
+  document.querySelectorAll('[data-del]').forEach(b => {
+    b.onclick = () => deleteCategoryRow(b.dataset.del, b.dataset.name);
+  });
+
+  // Edit form handlers
+  const cancelBtn = $('cancelEditBtn');
+  const saveBtn = $('saveEditBtn');
+  if (cancelBtn) cancelBtn.onclick = cancelEdit;
+  if (saveBtn) saveBtn.onclick = saveEdit;
+
+  // Emoji picker
+  const picker = $('emojiPicker');
+  if (picker) {
+    let html = '';
+    Object.entries(EMOJI_GROUPS).forEach(([group, emojis]) => {
+      html += `<div class="emoji-group-label">${group}</div><div class="emoji-row">`;
+      emojis.forEach(e => {
+        html += `<button class="emoji-btn" data-emoji="${e}" type="button">${e}</button>`;
+      });
+      html += '</div>';
+    });
+    picker.innerHTML = html;
+    picker.querySelectorAll('.emoji-btn').forEach(b => {
+      b.onclick = (ev) => {
+        ev.preventDefault();
+        const input = $('editEmojiInput');
+        input.value = b.dataset.emoji;
+        picker.querySelectorAll('.emoji-btn').forEach(x => x.classList.remove('selected'));
+        b.classList.add('selected');
+      };
+    });
+    // Highlight currently-selected emoji
+    const currentVal = $('editEmojiInput').value;
+    if (currentVal) {
+      const match = picker.querySelector(`[data-emoji="${currentVal}"]`);
+      if (match) match.classList.add('selected');
+    }
+    // Auto-focus name input
+    setTimeout(() => $('editNameInput')?.focus(), 50);
+  }
+}
+
+function initSortable() {
+  const container = $('categoriesSortable');
+  if (!container || !window.Sortable) return;
+  if (sortableInstance) { sortableInstance.destroy(); sortableInstance = null; }
+  sortableInstance = Sortable.create(container, {
+    handle: '.drag-handle',
+    animation: 150,
+    onEnd: async () => {
+      const rows = container.querySelectorAll('.cat-row[data-id]');
+      try {
+        const batch = db.batch();
+        rows.forEach((row, i) => {
+          batch.update(db.collection('custom_departments').doc(row.dataset.id), { order: i });
+        });
+        await batch.commit();
+        await loadCustomDepartments();
+        renderDeptFilters();
+        showToast('Order updated', 'success');
+      } catch (e) {
+        showToast('Reorder failed: ' + e.message, 'error');
+      }
+    }
   });
 }
 
-async function editCategory(id) {
-  const cat = customDepartmentsDocs.find(c => c.id === id);
-  if (!cat) return;
-  const newName = prompt('Edit category name:', cat.name);
-  if (newName === null) return;
-  const trimmed = newName.trim();
-  if (!trimmed) return;
-  if (trimmed !== cat.name && DEPARTMENTS.some(d => d.toLowerCase() === trimmed.toLowerCase())) {
-    showToast('That name already exists', 'error');
-    return;
-  }
-  const newEmoji = prompt('Edit emoji (or leave blank):', cat.emoji);
-  if (newEmoji === null) return;
+async function saveEdit() {
+  const name = $('editNameInput').value.trim();
+  const emoji = $('editEmojiInput').value.trim();
+  if (!name) { showToast('Name is required', 'error'); return; }
+
+  const dup = customDepartmentsDocs.find(c =>
+    c.name.toLowerCase() === name.toLowerCase() && c.id !== editingCategoryId
+  );
+  if (dup) { showToast('That name already exists', 'error'); return; }
 
   try {
-    await db.collection('custom_departments').doc(id).update({
-      name: trimmed,
-      emoji: newEmoji.trim(),
-    });
-    showToast('Updated: ' + trimmed, 'success');
+    if (editingCategoryId === '_new') {
+      const maxOrder = customDepartmentsDocs.reduce((m, c) => Math.max(m, c.order || 0), -1);
+      await db.collection('custom_departments').add({
+        name, emoji,
+        order: maxOrder + 1,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast('Added: ' + name, 'success');
+    } else {
+      await db.collection('custom_departments').doc(editingCategoryId).update({ name, emoji });
+      showToast('Updated: ' + name, 'success');
+    }
+    editingCategoryId = null;
     await loadCustomDepartments();
     renderCategoriesList();
     renderDeptFilters();
   } catch (e) {
-    showToast('Update failed: ' + e.message, 'error');
+    showToast('Save failed: ' + e.message, 'error');
   }
 }
 
-async function deleteCategory(id, name) {
+function cancelEdit() {
+  editingCategoryId = null;
+  renderCategoriesList();
+}
+
+async function deleteCategoryRow(id, name) {
   const usage = allPosts.filter(p => p.department === name).length;
   let warn = `Delete category "${name}"?\n\nThis cannot be undone.`;
   if (usage > 0) {
-    warn += `\n\n⚠️ Warning: ${usage} post${usage > 1 ? 's' : ''} currently use this category. Those posts will keep their department text, but the category will disappear from your filter chips and dropdown.`;
+    warn += `\n\n⚠️ ${usage} post${usage > 1 ? 's' : ''} currently use this category. Their department text stays, but it won't appear in filter chips or dropdown anymore.`;
   }
   if (!confirm(warn)) return;
   try {
@@ -1132,6 +1335,44 @@ async function deleteCategory(id, name) {
   } catch (e) {
     showToast('Delete failed: ' + e.message, 'error');
   }
+}
+
+async function seedDefaultCategories() {
+  const defaults = [
+    { name: 'UPSC', emoji: '🏛️' },
+    { name: 'SSC', emoji: '🏛️' },
+    { name: 'RRB', emoji: '🚂' },
+    { name: 'Banking', emoji: '🏦' },
+    { name: 'Defence', emoji: '🎖️' },
+    { name: 'Police', emoji: '👮' },
+    { name: 'Teaching', emoji: '📚' },
+    { name: 'GPSC', emoji: '🏛️' },
+    { name: 'State', emoji: '🏛️' },
+    { name: 'PSU', emoji: '⚡' },
+    { name: 'Other', emoji: '💼' }
+  ];
+  try {
+    const batch = db.batch();
+    defaults.forEach((c, i) => {
+      const ref = db.collection('custom_departments').doc();
+      batch.set(ref, {
+        name: c.name, emoji: c.emoji, order: i,
+        created_at: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    await batch.commit();
+    showToast('Defaults added — 11 categories', 'success');
+    await loadCustomDepartments();
+    renderCategoriesList();
+    renderDeptFilters();
+  } catch (e) {
+    showToast('Setup failed: ' + e.message, 'error');
+  }
+}
+
+function addNewCategory() {
+  editingCategoryId = '_new';
+  renderCategoriesList();
 }
 
 // ═════════════════════ GOV POSTS ═════════════════════
