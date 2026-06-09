@@ -612,7 +612,10 @@
 
       <div class="table-card">
         <div class="table-header">
-          <h2>All Posts</h2>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <h2>All Posts</h2>
+            <button class="btn btn-primary" id="newPostBtnInline" style="padding:6px 14px;font-size:12px;">+ Add Post</button>
+          </div>
           <div class="table-tools">
             <select class="select-small" id="filterScope">
               <option value="">All Scopes</option>
@@ -684,6 +687,11 @@
           <input type="text" id="f_name" placeholder="SSC CGL">
         </div>
         <div class="form-group">
+          <label>Icon (Emoji)</label>
+          <input type="text" id="f_icon" placeholder="🩺  📊  🚂  👮" maxlength="4" style="font-size:18px;text-align:center;">
+          <div class="hint">Paste any emoji. Leave blank to use department default.</div>
+        </div>
+        <div class="form-group full">
           <label>Full Name</label>
           <input type="text" id="f_full_name" placeholder="Staff Selection Commission – Combined Graduate Level">
         </div>
@@ -1037,7 +1045,7 @@ function renderPostsTable() {
 
   const rows = filtered.map(p => {
     const dept = p.department || 'Other';
-    const emoji = DEPT_EMOJI[dept] || '💼';
+    const emoji = p.icon && p.icon.trim() ? p.icon : (DEPT_EMOJI[dept] || '💼');
     const status = p.current_cycle?.status || 'no_announcement';
     const statusLabel = status.replace(/_/g, ' ');
     const updated = p.last_updated?.toDate ? p.last_updated.toDate() : null;
@@ -1087,6 +1095,7 @@ function renderPostsTable() {
 
 // ─── POST MODAL ───
 $('newPostBtn').onclick = () => openPostModal(null);
+$('newPostBtnInline').onclick = () => openPostModal(null);
 $('postModalClose').onclick = () => closePostModal();
 $('postModalCancel').onclick = () => closePostModal();
 $('postModal').addEventListener('click', (e) => {
@@ -1103,6 +1112,7 @@ function openPostModal(id) {
     const p = allPosts.find(x => x.id === id);
     if (!p) return;
     $('f_name').value = p.name || '';
+    $('f_icon').value = p.icon || '';
     $('f_full_name').value = p.full_name || '';
     $('f_scope').value = p.scope || 'Central';
     $('f_department').value = p.department || 'Other';
@@ -1125,7 +1135,7 @@ function openPostModal(id) {
     $('f_notes_en').value = c.notes_en || '';
     $('f_notes_hi').value = c.notes_hi || '';
   } else {
-    ['f_name','f_full_name','f_desc_en','f_desc_hi','f_min_age','f_max_age',
+    ['f_name','f_icon','f_full_name','f_desc_en','f_desc_hi','f_min_age','f_max_age',
      'f_qualification','f_stages','f_website','f_notification_date','f_form_start',
      'f_form_end','f_exam_date','f_result_date','f_pdf','f_apply','f_notes_en','f_notes_hi']
       .forEach(field => $(field).value = '');
@@ -1149,6 +1159,7 @@ $('savePostBtn').onclick = async () => {
   const stages = $('f_stages').value.split(',').map(s => s.trim()).filter(Boolean);
   const data = {
     name,
+    icon: $('f_icon').value.trim(),
     full_name: $('f_full_name').value.trim(),
     scope: $('f_scope').value,
     department: $('f_department').value,
