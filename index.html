@@ -949,11 +949,18 @@
     <div class="modal-body">
       <p style="color: var(--text-sec); font-size: 13px; margin-bottom: 18px; line-height: 1.5;">
         Drag the ⋮⋮ handle to reorder. Click ✏️ to rename or change emoji. Categories with no posts can be safely deleted.
+        <br><strong style="color:var(--primary);">All changes are pending until you click Apply.</strong>
       </p>
       <div id="categoriesList"></div>
       <button class="btn btn-accent" id="addCategoryBtnInModal" style="width: 100%; margin-top: 20px; justify-content: center;">
         ＋ Add New Category
       </button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" id="cancelModalBtn">Cancel</button>
+      <div class="right">
+        <button class="btn btn-primary" id="applyChangesBtn" style="opacity:0.5;cursor:not-allowed;" disabled>No Changes</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1081,8 +1088,10 @@ document.querySelectorAll('.sidebar nav a').forEach(link => {
 });
 
 // ═════════════════════ CUSTOM DEPARTMENTS ═════════════════════
-let customDepartmentsDocs = []; // [{ id, name, emoji, order }]
+let customDepartmentsDocs = []; // committed state from Firestore
+let workingDocs = [];           // in-modal working copy
 let editingCategoryId = null;   // null | docId | '_new'
+let modalHasChanges = false;    // true if user has made any pending changes
 let sortableInstance = null;
 
 // Curated emoji picker (Indian government context)
@@ -1115,7 +1124,6 @@ async function loadCustomDepartments() {
         });
       }
     });
-    // Fallback to hardcoded defaults if Firestore is empty
     if (customDepartmentsDocs.length === 0) {
       DEPARTMENTS = [...DEFAULT_DEPARTMENTS];
     }
@@ -1136,19 +1144,43 @@ function populateDeptDropdown() {
   if (current && DEPARTMENTS.includes(current)) sel.value = current;
 }
 
-// ─── MODAL ───
+// ─── OPEN / CLOSE MODAL ───
 function openCategoriesModal() {
+  // Snapshot committed state into working copy
+  workingDocs = customDepartmentsDocs.map(d => ({ ...d }));
+  modalHasChanges = false;
   editingCategoryId = null;
   renderCategoriesList();
+  updateApplyButtonState();
   $('categoriesModal').classList.add('show');
 }
 
+function tryCloseCategoriesModal() {
+  if (modalHasChanges) {
+    if (!confirm('You have pending changes. Discard them?')) return;
+  }
+  workingDocs = [];
+  modalHasChanges = false;
+  editingCategoryId = null;
+  $('categoriesModal').classList.remove('show');
+}
+
+function updateApplyButtonState() {
+  const btn = $('applyChangesBtn');
+  if (!btn) return;
+  btn.disabled = !modalHasChanges;
+  btn.style.opacity = modalHasChanges ? '1' : '0.5';
+  btn.style.cursor = modalHasChanges ? 'pointer' : 'not-allowed';
+  btn.textContent = modalHasChanges ? '✓ Apply Changes' : 'No Changes';
+}
+
+// ─── RENDER ───
 function renderCategoriesList() {
   const list = $('categoriesList');
   const addBtn = $('addCategoryBtnInModal');
 
-  // Empty state — show "Set up defaults" button
-  if (customDepartmentsDocs.length === 0 && editingCategoryId !== '_new') {
+  // Empty state — show "Set up defaults" button (also batched)
+  if (workingDocs.length === 0 && editingCategoryId !== '_new') {
     list.innerHTML = `
       <div style="text-align:center;padding:32px 20px;background:var(--bg);border-radius:12px;">
         <div style="font-size:40px;margin-bottom:10px;">📋</div>
@@ -1157,14 +1189,13 @@ function renderCategoriesList() {
         <button class="btn btn-primary" id="seedDefaultsBtn">⚡ Set up Default Categories</button>
       </div>
     `;
-    $('seedDefaultsBtn').onclick = seedDefaultCategories;
+    $('seedDefaultsBtn').onclick = seedDefaultCategoriesIntoWorking;
     addBtn.style.display = '';
     return;
   }
 
-  // Render rows
   let html = '<div id="categoriesSortable">';
-  customDepartmentsDocs.forEach(c => {
+  workingDocs.forEach(c => {
     html += (editingCategoryId === c.id) ? renderEditRow(c) : renderNormalRow(c);
   });
   if (editingCategoryId === '_new') {
@@ -1173,7 +1204,6 @@ function renderCategoriesList() {
   html += '</div>';
   list.innerHTML = html;
 
-  // Hide "+ Add" button while editing
   addBtn.style.display = editingCategoryId ? 'none' : '';
 
   wireRowHandlers();
@@ -1181,13 +1211,20 @@ function renderCategoriesList() {
 }
 
 function renderNormalRow(c) {
+  const isNew = c._isNew;
+  const isModified = c._modified;
+  const tagHtml = isNew
+    ? '<span style="font-size:10px;background:var(--success);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700;">NEW</span>'
+    : isModified
+      ? '<span style="font-size:10px;background:var(--warning);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700;">EDITED</span>'
+      : '';
   return `
     <div class="cat-row" data-id="${c.id}">
       <span class="drag-handle" title="Drag to reorder">⋮⋮</span>
       <span class="cat-emoji">${c.emoji || '💼'}</span>
-      <span class="cat-name">${escape(c.name)}</span>
+      <span class="cat-name">${escape(c.name)} ${tagHtml}</span>
       <button class="icon-btn" data-edit="${c.id}" title="Edit">✏️</button>
-      <button class="icon-btn danger" data-del="${c.id}" data-name="${escape(c.name)}" title="Delete">🗑</button>
+      <button class="icon-btn danger" data-del="${c.id}" data-name="${escape(c.name)}" title="Remove">🗑</button>
     </div>
   `;
 }
@@ -1205,7 +1242,7 @@ function renderEditRow(c) {
       <div class="emoji-picker" id="emojiPicker"></div>
       <div class="cat-edit-actions">
         <button class="btn btn-outline" id="cancelEditBtn">Cancel</button>
-        <button class="btn btn-primary" id="saveEditBtn">${isNew ? '＋ Add Category' : '💾 Save Changes'}</button>
+        <button class="btn btn-primary" id="saveEditBtn">${isNew ? '＋ Add' : '✓ Done'}</button>
       </div>
     </div>
   `;
@@ -1216,16 +1253,14 @@ function wireRowHandlers() {
     b.onclick = () => { editingCategoryId = b.dataset.edit; renderCategoriesList(); };
   });
   document.querySelectorAll('[data-del]').forEach(b => {
-    b.onclick = () => deleteCategoryRow(b.dataset.del, b.dataset.name);
+    b.onclick = () => deleteFromWorking(b.dataset.del, b.dataset.name);
   });
 
-  // Edit form handlers
   const cancelBtn = $('cancelEditBtn');
   const saveBtn = $('saveEditBtn');
-  if (cancelBtn) cancelBtn.onclick = cancelEdit;
-  if (saveBtn) saveBtn.onclick = saveEdit;
+  if (cancelBtn) cancelBtn.onclick = cancelInlineEdit;
+  if (saveBtn) saveBtn.onclick = saveInlineEdit;
 
-  // Emoji picker
   const picker = $('emojiPicker');
   if (picker) {
     let html = '';
@@ -1240,19 +1275,16 @@ function wireRowHandlers() {
     picker.querySelectorAll('.emoji-btn').forEach(b => {
       b.onclick = (ev) => {
         ev.preventDefault();
-        const input = $('editEmojiInput');
-        input.value = b.dataset.emoji;
+        $('editEmojiInput').value = b.dataset.emoji;
         picker.querySelectorAll('.emoji-btn').forEach(x => x.classList.remove('selected'));
         b.classList.add('selected');
       };
     });
-    // Highlight currently-selected emoji
     const currentVal = $('editEmojiInput').value;
     if (currentVal) {
       const match = picker.querySelector(`[data-emoji="${currentVal}"]`);
       if (match) match.classList.add('selected');
     }
-    // Auto-focus name input
     setTimeout(() => $('editNameInput')?.focus(), 50);
   }
 }
@@ -1264,80 +1296,74 @@ function initSortable() {
   sortableInstance = Sortable.create(container, {
     handle: '.drag-handle',
     animation: 150,
-    onEnd: async () => {
-      const rows = container.querySelectorAll('.cat-row[data-id]');
-      try {
-        const batch = db.batch();
-        rows.forEach((row, i) => {
-          batch.update(db.collection('custom_departments').doc(row.dataset.id), { order: i });
-        });
-        await batch.commit();
-        await loadCustomDepartments();
-        renderDeptFilters();
-        showToast('Order updated', 'success');
-      } catch (e) {
-        showToast('Reorder failed: ' + e.message, 'error');
-      }
+    onEnd: () => {
+      // Reorder workingDocs based on DOM order
+      const newOrder = [...container.querySelectorAll('.cat-row[data-id]')]
+        .map(row => row.dataset.id);
+      workingDocs.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+      workingDocs.forEach((c, i) => { c.order = i; });
+      modalHasChanges = true;
+      updateApplyButtonState();
     }
   });
 }
 
-async function saveEdit() {
+// ─── IN-MODAL EDIT (operates on workingDocs only) ───
+function saveInlineEdit() {
   const name = $('editNameInput').value.trim();
   const emoji = $('editEmojiInput').value.trim();
   if (!name) { showToast('Name is required', 'error'); return; }
 
-  const dup = customDepartmentsDocs.find(c =>
+  const dup = workingDocs.find(c =>
     c.name.toLowerCase() === name.toLowerCase() && c.id !== editingCategoryId
   );
   if (dup) { showToast('That name already exists', 'error'); return; }
 
-  try {
-    if (editingCategoryId === '_new') {
-      const maxOrder = customDepartmentsDocs.reduce((m, c) => Math.max(m, c.order || 0), -1);
-      await db.collection('custom_departments').add({
-        name, emoji,
-        order: maxOrder + 1,
-        created_at: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      showToast('Added: ' + name, 'success');
-    } else {
-      await db.collection('custom_departments').doc(editingCategoryId).update({ name, emoji });
-      showToast('Updated: ' + name, 'success');
+  if (editingCategoryId === '_new') {
+    const tempId = '_temp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const maxOrder = workingDocs.reduce((m, c) => Math.max(m, c.order ?? 0), -1);
+    workingDocs.push({
+      id: tempId,
+      _isNew: true,
+      name,
+      emoji,
+      order: maxOrder + 1,
+    });
+  } else {
+    const idx = workingDocs.findIndex(c => c.id === editingCategoryId);
+    if (idx >= 0) {
+      workingDocs[idx].name = name;
+      workingDocs[idx].emoji = emoji;
+      if (!workingDocs[idx]._isNew) workingDocs[idx]._modified = true;
     }
-    editingCategoryId = null;
-    await loadCustomDepartments();
-    renderCategoriesList();
-    renderDeptFilters();
-  } catch (e) {
-    showToast('Save failed: ' + e.message, 'error');
   }
+
+  modalHasChanges = true;
+  editingCategoryId = null;
+  renderCategoriesList();
+  updateApplyButtonState();
 }
 
-function cancelEdit() {
+function cancelInlineEdit() {
   editingCategoryId = null;
   renderCategoriesList();
 }
 
-async function deleteCategoryRow(id, name) {
+function deleteFromWorking(id, name) {
   const usage = allPosts.filter(p => p.department === name).length;
-  let warn = `Delete category "${name}"?\n\nThis cannot be undone.`;
+  let warn = `Remove "${name}" from the list?`;
   if (usage > 0) {
-    warn += `\n\n⚠️ ${usage} post${usage > 1 ? 's' : ''} currently use this category. Their department text stays, but it won't appear in filter chips or dropdown anymore.`;
+    warn += `\n\n⚠️ ${usage} existing post${usage > 1 ? 's' : ''} use this category. They keep their text, but the category disappears from filter chips and dropdown after you Apply.`;
   }
+  warn += `\n\n(Nothing is deleted until you click Apply Changes.)`;
   if (!confirm(warn)) return;
-  try {
-    await db.collection('custom_departments').doc(id).delete();
-    showToast('Deleted: ' + name, 'success');
-    await loadCustomDepartments();
-    renderCategoriesList();
-    renderDeptFilters();
-  } catch (e) {
-    showToast('Delete failed: ' + e.message, 'error');
-  }
+  workingDocs = workingDocs.filter(c => c.id !== id);
+  modalHasChanges = true;
+  renderCategoriesList();
+  updateApplyButtonState();
 }
 
-async function seedDefaultCategories() {
+function seedDefaultCategoriesIntoWorking() {
   const defaults = [
     { name: 'UPSC', emoji: '🏛️' },
     { name: 'SSC', emoji: '🏛️' },
@@ -1351,28 +1377,85 @@ async function seedDefaultCategories() {
     { name: 'PSU', emoji: '⚡' },
     { name: 'Other', emoji: '💼' }
   ];
-  try {
-    const batch = db.batch();
-    defaults.forEach((c, i) => {
-      const ref = db.collection('custom_departments').doc();
-      batch.set(ref, {
-        name: c.name, emoji: c.emoji, order: i,
-        created_at: firebase.firestore.FieldValue.serverTimestamp()
-      });
+  defaults.forEach((c, i) => {
+    workingDocs.push({
+      id: '_temp_seed_' + i,
+      _isNew: true,
+      name: c.name,
+      emoji: c.emoji,
+      order: i,
     });
-    await batch.commit();
-    showToast('Defaults added — 11 categories', 'success');
-    await loadCustomDepartments();
-    renderCategoriesList();
-    renderDeptFilters();
-  } catch (e) {
-    showToast('Setup failed: ' + e.message, 'error');
-  }
+  });
+  modalHasChanges = true;
+  renderCategoriesList();
+  updateApplyButtonState();
 }
 
 function addNewCategory() {
   editingCategoryId = '_new';
   renderCategoriesList();
+}
+
+// ─── APPLY ALL CHANGES (commits to Firestore) ───
+async function applyChanges() {
+  if (!modalHasChanges) return;
+  const btn = $('applyChangesBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;"></div> Applying…';
+
+  try {
+    const original = customDepartmentsDocs;
+    const working = workingDocs;
+    const batch = db.batch();
+
+    // Find deletes
+    const workingIds = new Set(working.filter(w => !w._isNew).map(w => w.id));
+    original.forEach(o => {
+      if (!workingIds.has(o.id)) {
+        batch.delete(db.collection('custom_departments').doc(o.id));
+      }
+    });
+
+    // Adds and updates
+    working.forEach((w, i) => {
+      if (w._isNew) {
+        const ref = db.collection('custom_departments').doc();
+        batch.set(ref, {
+          name: w.name,
+          emoji: w.emoji,
+          order: i,
+          created_at: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      } else {
+        const orig = original.find(o => o.id === w.id);
+        if (!orig || orig.name !== w.name || orig.emoji !== w.emoji || (orig.order ?? 0) !== i) {
+          batch.update(db.collection('custom_departments').doc(w.id), {
+            name: w.name,
+            emoji: w.emoji,
+            order: i
+          });
+        }
+      }
+    });
+
+    await batch.commit();
+    showToast('Changes applied', 'success');
+
+    // Reset state and close
+    modalHasChanges = false;
+    workingDocs = [];
+    editingCategoryId = null;
+    $('categoriesModal').classList.remove('show');
+
+    // Refresh main page
+    await loadCustomDepartments();
+    renderDeptFilters();
+    renderPostsTable();
+  } catch (e) {
+    showToast('Apply failed: ' + e.message, 'error');
+    btn.disabled = false;
+    updateApplyButtonState();
+  }
 }
 
 // ═════════════════════ GOV POSTS ═════════════════════
@@ -1712,9 +1795,11 @@ async function deleteAffair(id, title) {
 }
 
 // ═════════════════════ HELPERS ═════════════════════
-$('categoriesModalClose').onclick = () => $('categoriesModal').classList.remove('show');
+$('categoriesModalClose').onclick = () => tryCloseCategoriesModal();
+$('cancelModalBtn').onclick = () => tryCloseCategoriesModal();
+$('applyChangesBtn').onclick = () => applyChanges();
 $('categoriesModal').addEventListener('click', (e) => {
-  if (e.target.id === 'categoriesModal') $('categoriesModal').classList.remove('show');
+  if (e.target.id === 'categoriesModal') tryCloseCategoriesModal();
 });
 $('addCategoryBtnInModal').onclick = () => addNewCategory();
 
