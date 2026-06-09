@@ -612,10 +612,7 @@
 
       <div class="table-card">
         <div class="table-header">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <h2>All Posts</h2>
-            <button class="btn btn-primary" id="newPostBtnInline" style="padding:6px 14px;font-size:12px;">+ Add Post</button>
-          </div>
+          <h2>All Posts</h2>
           <div class="table-tools">
             <select class="select-small" id="filterScope">
               <option value="">All Scopes</option>
@@ -687,11 +684,6 @@
           <input type="text" id="f_name" placeholder="SSC CGL">
         </div>
         <div class="form-group">
-          <label>Icon (Emoji)</label>
-          <input type="text" id="f_icon" placeholder="🩺  📊  🚂  👮" maxlength="4" style="font-size:18px;text-align:center;">
-          <div class="hint">Paste any emoji. Leave blank to use department default.</div>
-        </div>
-        <div class="form-group full">
           <label>Full Name</label>
           <input type="text" id="f_full_name" placeholder="Staff Selection Commission – Combined Graduate Level">
         </div>
@@ -705,17 +697,7 @@
         <div class="form-group">
           <label>Department *</label>
           <select id="f_department">
-            <option value="UPSC">UPSC</option>
-            <option value="SSC">SSC</option>
-            <option value="RRB">RRB</option>
-            <option value="Banking">Banking</option>
-            <option value="Defence">Defence</option>
-            <option value="Police">Police</option>
-            <option value="Teaching">Teaching</option>
-            <option value="GPSC">GPSC</option>
-            <option value="State">State</option>
-            <option value="PSU">PSU</option>
-            <option value="Other">Other</option>
+            <!-- populated by JS -->
           </select>
         </div>
 
@@ -862,6 +844,28 @@
 </div>
 
 <!-- ════════════════════════════════════════════════
+     MANAGE CATEGORIES MODAL
+     ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="categoriesModal">
+  <div class="modal" style="width: 540px;">
+    <div class="modal-header">
+      <h2>⚙ Manage Categories</h2>
+      <button class="modal-close" id="categoriesModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: var(--text-sec); font-size: 13px; margin-bottom: 18px; line-height: 1.5;">
+        Default categories are built-in and can't be changed.<br>
+        Your custom categories can be renamed, re-emoji'd, or deleted.
+      </p>
+      <div id="categoriesList"></div>
+      <button class="btn btn-accent" id="addCategoryBtnInModal" style="width: 100%; margin-top: 20px; justify-content: center;">
+        ＋ Add New Category
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
      FIREBASE + LOGIC
      ════════════════════════════════════════════════ -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -897,7 +901,8 @@ let allPosts = [];
 let activeDeptFilter = 'All';
 let editingPostId = null;
 
-const DEPARTMENTS = ['All', 'UPSC', 'SSC', 'RRB', 'Banking', 'Defence', 'Police', 'Teaching', 'GPSC', 'State', 'PSU', 'Other'];
+const DEFAULT_DEPARTMENTS = ['All', 'UPSC', 'SSC', 'RRB', 'Banking', 'Defence', 'Police', 'Teaching', 'GPSC', 'State', 'PSU', 'Other'];
+let DEPARTMENTS = [...DEFAULT_DEPARTMENTS];
 const DEPT_EMOJI = {
   UPSC: '🏛', SSC: '🏛', RRB: '🚂', Banking: '🏦', Defence: '🎖',
   Police: '👮', Teaching: '📚', GPSC: '🏛', State: '🏛', PSU: '⚡', Other: '💼'
@@ -913,7 +918,7 @@ auth.onAuthStateChanged(user => {
     $('adminApp').classList.add('show');
     $('adminName').textContent = user.email.split('@')[0];
     $('adminAvatar').textContent = user.email[0].toUpperCase();
-    loadPosts();
+    loadCustomDepartments().then(() => loadPosts());
   } else {
     if (user) {
       auth.signOut();
@@ -982,6 +987,153 @@ document.querySelectorAll('.sidebar nav a').forEach(link => {
   });
 });
 
+// ═════════════════════ CUSTOM DEPARTMENTS ═════════════════════
+let customDepartmentsDocs = []; // [{ id, name, emoji }]
+
+async function loadCustomDepartments() {
+  // Reset to defaults each time so deletions also propagate
+  DEPARTMENTS = [...DEFAULT_DEPARTMENTS];
+  customDepartmentsDocs = [];
+  try {
+    const snap = await db.collection('custom_departments').orderBy('name').get();
+    snap.docs.forEach(d => {
+      const data = d.data();
+      if (data.name && !DEPARTMENTS.includes(data.name)) {
+        DEPARTMENTS.push(data.name);
+        if (data.emoji) DEPT_EMOJI[data.name] = data.emoji;
+        customDepartmentsDocs.push({ id: d.id, name: data.name, emoji: data.emoji || '' });
+      }
+    });
+  } catch (e) {
+    console.warn('Could not load custom departments (Firestore rules may need updating):', e.message);
+  }
+  populateDeptDropdown();
+}
+
+function populateDeptDropdown() {
+  const sel = $('f_department');
+  const current = sel.value;
+  sel.innerHTML = DEPARTMENTS
+    .filter(d => d !== 'All')
+    .map(d => `<option value="${d}">${d}</option>`)
+    .join('');
+  if (current && DEPARTMENTS.includes(current)) sel.value = current;
+}
+
+// ─── ADD NEW ───
+async function addNewCategory() {
+  const name = prompt('New category name (e.g., "Customs", "ISRO", "Coast Guard"):');
+  if (!name || !name.trim()) return;
+  const trimmed = name.trim();
+  if (DEPARTMENTS.some(d => d.toLowerCase() === trimmed.toLowerCase())) {
+    showToast('Category already exists', 'error');
+    return;
+  }
+  const emoji = prompt('Emoji for this category (optional, e.g., 📦, 🚀, ⚓):') || '';
+  try {
+    await db.collection('custom_departments').add({
+      name: trimmed,
+      emoji: emoji.trim(),
+      created_at: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    showToast('Added: ' + trimmed, 'success');
+    await loadCustomDepartments();
+    renderDeptFilters();
+    if ($('categoriesModal').classList.contains('show')) renderCategoriesList();
+  } catch (e) {
+    showToast('Failed: ' + e.message, 'error');
+  }
+}
+
+// ─── MANAGE MODAL ───
+function openCategoriesModal() {
+  renderCategoriesList();
+  $('categoriesModal').classList.add('show');
+}
+
+function renderCategoriesList() {
+  const defaults = DEFAULT_DEPARTMENTS.filter(d => d !== 'All');
+  let html = `
+    <h3 style="font-size:11px;text-transform:uppercase;color:var(--text-sec);letter-spacing:.8px;margin-bottom:10px;">Default categories (locked)</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:24px;">
+      ${defaults.map(d => `<span style="padding:6px 12px;background:var(--bg);border-radius:20px;font-size:12px;color:var(--text-sec);"><span style="margin-right:4px;">${DEPT_EMOJI[d] || '💼'}</span>${d}</span>`).join('')}
+    </div>
+    <h3 style="font-size:11px;text-transform:uppercase;color:var(--text-sec);letter-spacing:.8px;margin-bottom:10px;">Your custom categories (${customDepartmentsDocs.length})</h3>
+  `;
+
+  if (customDepartmentsDocs.length === 0) {
+    html += `<p style="color:var(--text-light);font-size:13px;padding:16px;background:var(--bg);border-radius:10px;text-align:center;">No custom categories yet.<br>Click the button below to add your first one.</p>`;
+  } else {
+    html += '<div>';
+    customDepartmentsDocs.forEach(c => {
+      html += `
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border-radius:10px;margin-bottom:8px;">
+          <span style="font-size:20px;">${c.emoji || '💼'}</span>
+          <span style="flex:1;font-weight:600;font-size:14px;">${escape(c.name)}</span>
+          <button class="icon-btn" data-edit-cat="${c.id}" title="Edit">✏️</button>
+          <button class="icon-btn danger" data-del-cat="${c.id}" data-name="${escape(c.name)}" title="Delete">🗑</button>
+        </div>
+      `;
+    });
+    html += '</div>';
+  }
+
+  $('categoriesList').innerHTML = html;
+
+  document.querySelectorAll('[data-edit-cat]').forEach(b => {
+    b.onclick = () => editCategory(b.dataset.editCat);
+  });
+  document.querySelectorAll('[data-del-cat]').forEach(b => {
+    b.onclick = () => deleteCategory(b.dataset.delCat, b.dataset.name);
+  });
+}
+
+async function editCategory(id) {
+  const cat = customDepartmentsDocs.find(c => c.id === id);
+  if (!cat) return;
+  const newName = prompt('Edit category name:', cat.name);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed) return;
+  if (trimmed !== cat.name && DEPARTMENTS.some(d => d.toLowerCase() === trimmed.toLowerCase())) {
+    showToast('That name already exists', 'error');
+    return;
+  }
+  const newEmoji = prompt('Edit emoji (or leave blank):', cat.emoji);
+  if (newEmoji === null) return;
+
+  try {
+    await db.collection('custom_departments').doc(id).update({
+      name: trimmed,
+      emoji: newEmoji.trim(),
+    });
+    showToast('Updated: ' + trimmed, 'success');
+    await loadCustomDepartments();
+    renderCategoriesList();
+    renderDeptFilters();
+  } catch (e) {
+    showToast('Update failed: ' + e.message, 'error');
+  }
+}
+
+async function deleteCategory(id, name) {
+  const usage = allPosts.filter(p => p.department === name).length;
+  let warn = `Delete category "${name}"?\n\nThis cannot be undone.`;
+  if (usage > 0) {
+    warn += `\n\n⚠️ Warning: ${usage} post${usage > 1 ? 's' : ''} currently use this category. Those posts will keep their department text, but the category will disappear from your filter chips and dropdown.`;
+  }
+  if (!confirm(warn)) return;
+  try {
+    await db.collection('custom_departments').doc(id).delete();
+    showToast('Deleted: ' + name, 'success');
+    await loadCustomDepartments();
+    renderCategoriesList();
+    renderDeptFilters();
+  } catch (e) {
+    showToast('Delete failed: ' + e.message, 'error');
+  }
+}
+
 // ═════════════════════ GOV POSTS ═════════════════════
 async function loadPosts() {
   try {
@@ -1008,15 +1160,22 @@ function renderStats() {
 }
 
 function renderDeptFilters() {
-  $('filterTabs').innerHTML = DEPARTMENTS.map(d => {
-    const emoji = d === 'All' ? '📋' : (DEPT_EMOJI[d] || '');
+  const chips = DEPARTMENTS.map(d => {
+    const emoji = d === 'All' ? '📋' : (DEPT_EMOJI[d] || '💼');
     return `<div class="filter-tab ${activeDeptFilter === d ? 'active' : ''}" data-dept="${d}">${emoji} ${d}</div>`;
   }).join('');
+  const addChip = `<div class="filter-tab" id="manageCategoriesChip" style="border-style:dashed;color:var(--primary);border-color:var(--primary);background:#fff;">⚙ Manage Categories</div>`;
+  $('filterTabs').innerHTML = chips + addChip;
+
   document.querySelectorAll('.filter-tab').forEach(tab => {
     tab.onclick = () => {
-      activeDeptFilter = tab.dataset.dept;
-      renderDeptFilters();
-      renderPostsTable();
+      if (tab.id === 'manageCategoriesChip') {
+        openCategoriesModal();
+      } else {
+        activeDeptFilter = tab.dataset.dept;
+        renderDeptFilters();
+        renderPostsTable();
+      }
     };
   });
 }
@@ -1045,7 +1204,7 @@ function renderPostsTable() {
 
   const rows = filtered.map(p => {
     const dept = p.department || 'Other';
-    const emoji = p.icon && p.icon.trim() ? p.icon : (DEPT_EMOJI[dept] || '💼');
+    const emoji = DEPT_EMOJI[dept] || '💼';
     const status = p.current_cycle?.status || 'no_announcement';
     const statusLabel = status.replace(/_/g, ' ');
     const updated = p.last_updated?.toDate ? p.last_updated.toDate() : null;
@@ -1095,7 +1254,6 @@ function renderPostsTable() {
 
 // ─── POST MODAL ───
 $('newPostBtn').onclick = () => openPostModal(null);
-$('newPostBtnInline').onclick = () => openPostModal(null);
 $('postModalClose').onclick = () => closePostModal();
 $('postModalCancel').onclick = () => closePostModal();
 $('postModal').addEventListener('click', (e) => {
@@ -1112,7 +1270,6 @@ function openPostModal(id) {
     const p = allPosts.find(x => x.id === id);
     if (!p) return;
     $('f_name').value = p.name || '';
-    $('f_icon').value = p.icon || '';
     $('f_full_name').value = p.full_name || '';
     $('f_scope').value = p.scope || 'Central';
     $('f_department').value = p.department || 'Other';
@@ -1135,7 +1292,7 @@ function openPostModal(id) {
     $('f_notes_en').value = c.notes_en || '';
     $('f_notes_hi').value = c.notes_hi || '';
   } else {
-    ['f_name','f_icon','f_full_name','f_desc_en','f_desc_hi','f_min_age','f_max_age',
+    ['f_name','f_full_name','f_desc_en','f_desc_hi','f_min_age','f_max_age',
      'f_qualification','f_stages','f_website','f_notification_date','f_form_start',
      'f_form_end','f_exam_date','f_result_date','f_pdf','f_apply','f_notes_en','f_notes_hi']
       .forEach(field => $(field).value = '');
@@ -1159,7 +1316,6 @@ $('savePostBtn').onclick = async () => {
   const stages = $('f_stages').value.split(',').map(s => s.trim()).filter(Boolean);
   const data = {
     name,
-    icon: $('f_icon').value.trim(),
     full_name: $('f_full_name').value.trim(),
     scope: $('f_scope').value,
     department: $('f_department').value,
@@ -1315,6 +1471,12 @@ async function deleteAffair(id, title) {
 }
 
 // ═════════════════════ HELPERS ═════════════════════
+$('categoriesModalClose').onclick = () => $('categoriesModal').classList.remove('show');
+$('categoriesModal').addEventListener('click', (e) => {
+  if (e.target.id === 'categoriesModal') $('categoriesModal').classList.remove('show');
+});
+$('addCategoryBtnInModal').onclick = () => addNewCategory();
+
 function showToast(msg, type = 'success') {
   const t = document.createElement('div');
   t.className = `toast toast-${type}`;
