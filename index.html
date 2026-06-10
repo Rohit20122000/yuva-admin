@@ -666,6 +666,7 @@
     </div>
     <nav>
       <a class="active" id="navGovPosts" data-section="gov-posts">📋 Government Posts</a>
+      <a id="navMaterials" data-section="materials">📚 Study Materials</a>
       <a id="navAffairs" data-section="affairs">📰 Current Affairs</a>
       <a id="navUsers">👥 Users</a>
       <a id="navAnalytics">📊 Analytics</a>
@@ -733,6 +734,52 @@
         <div class="filter-tabs" id="filterTabs"></div>
         <div id="postsTable">
           <div class="loading-overlay"><div class="spinner"></div><span>Loading posts…</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+         STUDY MATERIALS SECTION
+         ════════════════════════════════════════════════ -->
+    <div class="section-view" id="sectionMaterials">
+      <div class="page-header">
+        <div>
+          <h1>Study Materials</h1>
+          <p>Upload PDFs from chaudharyyuva.in. Subjects come from materials themselves — no separate setup.</p>
+        </div>
+        <button class="btn btn-accent" id="newMaterialBtn">➕ Add Material</button>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="label">Total Materials</div><div class="value" id="matStatTotal" style="color: var(--primary)">—</div></div>
+        <div class="stat-card"><div class="label">Subjects</div><div class="value" id="matStatSubjects" style="color: var(--success)">—</div></div>
+        <div class="stat-card"><div class="label">In Hindi</div><div class="value" id="matStatHindi" style="color: var(--accent)">—</div></div>
+        <div class="stat-card"><div class="label">In English</div><div class="value" id="matStatEnglish" style="color: var(--warning)">—</div></div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h2>All Materials</h2>
+          <div class="table-tools">
+            <select class="select-small" id="matFilterType">
+              <option value="">All Types</option>
+              <option value="notes">📘 Notes</option>
+              <option value="practice_sets">📝 Practice Sets</option>
+              <option value="previous_papers">📋 Previous Papers</option>
+              <option value="reference_books">📕 Reference Books</option>
+              <option value="magazines">📰 Magazines</option>
+            </select>
+            <select class="select-small" id="matFilterSubject">
+              <option value="">All Subjects</option>
+            </select>
+            <div class="search-box">
+              <span>🔍</span>
+              <input type="text" id="matSearchInput" placeholder="Search materials…">
+            </div>
+          </div>
+        </div>
+        <div id="materialsTable">
+          <div class="loading-overlay"><div class="spinner"></div><span>Loading materials…</span></div>
         </div>
       </div>
     </div>
@@ -938,6 +985,70 @@
 </div>
 
 <!-- ════════════════════════════════════════════════
+     MATERIAL MODAL
+     ════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="materialModal">
+  <div class="modal" style="width: 640px;">
+    <div class="modal-header">
+      <h2 id="materialModalTitle">New Material</h2>
+      <button class="modal-close" id="materialModalClose">✕</button>
+    </div>
+    <div class="modal-body">
+      <datalist id="subjectsDatalist"></datalist>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Title *</label>
+          <input type="text" id="m_title" placeholder="Profit & Loss — 200 Practice Questions">
+        </div>
+        <div class="form-group full">
+          <label>Subject *</label>
+          <input type="text" id="m_subject" list="subjectsDatalist" placeholder="e.g. Quantitative Aptitude">
+          <div class="hint">Type a new subject or pick from your existing ones (autocomplete).</div>
+        </div>
+        <div class="form-group">
+          <label>Type *</label>
+          <select id="m_type">
+            <option value="notes">📘 Study Notes</option>
+            <option value="practice_sets">📝 Practice Sets</option>
+            <option value="previous_papers">📋 Previous Papers</option>
+            <option value="reference_books">📕 Reference Books</option>
+            <option value="magazines">📰 Magazines</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Language</label>
+          <select id="m_language">
+            <option value="english">English</option>
+            <option value="hindi">हिन्दी (Hindi)</option>
+            <option value="both">Both (EN + हिन्दी)</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label>PDF URL *</label>
+          <input type="url" id="m_pdfUrl" placeholder="https://chaudharyyuva.in/uploads/profit-loss.pdf">
+          <div class="hint">Paste the direct PDF link from your chaudharyyuva.in upload.</div>
+        </div>
+        <div class="form-group">
+          <label>Pages (optional)</label>
+          <input type="number" id="m_pages" min="0" placeholder="45">
+        </div>
+        <div class="form-group full">
+          <label>Description (optional)</label>
+          <textarea id="m_description" rows="2" placeholder="1–2 line summary shown under the title"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-danger hidden" id="deleteMaterialBtn">🗑 Delete</button>
+      <div class="right">
+        <button class="btn btn-outline" id="materialModalCancel">Cancel</button>
+        <button class="btn btn-primary" id="saveMaterialBtn">💾 Save Material</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════
      MANAGE CATEGORIES MODAL
      ════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="categoriesModal">
@@ -1080,6 +1191,9 @@ document.querySelectorAll('.sidebar nav a').forEach(link => {
     if (section === 'gov-posts') {
       $('sectionGovPosts').classList.add('active');
       loadPosts();
+    } else if (section === 'materials') {
+      $('sectionMaterials').classList.add('active');
+      loadMaterials();
     } else if (section === 'affairs') {
       $('sectionAffairs').classList.add('active');
       loadAffairs();
@@ -1697,6 +1811,228 @@ $('deletePostBtn').onclick = async () => {
     showToast('Deleted', 'success');
     closePostModal();
     loadPosts();
+  } catch (e) {
+    showToast('Delete failed: ' + e.message, 'error');
+  }
+};
+
+// ═════════════════════ STUDY MATERIALS ═════════════════════
+let allMaterials = [];
+let editingMaterialId = null;
+
+const MAT_TYPE_META = {
+  notes:            { label: 'Notes',           emoji: '📘', color: '#6366F1' },
+  practice_sets:    { label: 'Practice Sets',   emoji: '📝', color: '#10B981' },
+  previous_papers:  { label: 'Previous Papers', emoji: '📋', color: '#F59E0B' },
+  reference_books:  { label: 'Reference Books', emoji: '📕', color: '#EF4444' },
+  magazines:        { label: 'Magazines',       emoji: '📰', color: '#EC4899' }
+};
+
+async function loadMaterials() {
+  try {
+    let snap;
+    try {
+      snap = await db.collection('materials').orderBy('uploadedAt', 'desc').get();
+    } catch (_) {
+      snap = await db.collection('materials').get();
+    }
+    allMaterials = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderMatStats();
+    renderMatSubjectFilter();
+    renderMatSubjectsDatalist();
+    renderMaterialsTable();
+  } catch (e) {
+    console.error(e);
+    showToast('Failed to load materials: ' + e.message, 'error');
+    $('materialsTable').innerHTML = '<div class="empty-state"><div class="emoji">❌</div><h3>Error</h3><p>' + e.message + '</p></div>';
+  }
+}
+
+function extractMatSubjects() {
+  const set = new Set();
+  allMaterials.forEach(m => {
+    if (m.subject && m.subject.trim()) set.add(m.subject.trim());
+  });
+  return [...set].sort();
+}
+
+function renderMatStats() {
+  $('matStatTotal').textContent = allMaterials.length;
+  $('matStatSubjects').textContent = extractMatSubjects().length;
+  $('matStatHindi').textContent = allMaterials.filter(m => m.language === 'hindi' || m.language === 'both').length;
+  $('matStatEnglish').textContent = allMaterials.filter(m => m.language === 'english' || m.language === 'both').length;
+}
+
+function renderMatSubjectFilter() {
+  const sel = $('matFilterSubject');
+  const current = sel.value;
+  const subjects = extractMatSubjects();
+  sel.innerHTML = '<option value="">All Subjects</option>' +
+    subjects.map(s => `<option value="${escape(s)}">${escape(s)}</option>`).join('');
+  if (subjects.includes(current)) sel.value = current;
+}
+
+function renderMatSubjectsDatalist() {
+  $('subjectsDatalist').innerHTML = extractMatSubjects()
+    .map(s => `<option value="${escape(s)}">`).join('');
+}
+
+function renderMaterialsTable() {
+  const search = $('matSearchInput').value.toLowerCase();
+  const typeF = $('matFilterType').value;
+  const subjF = $('matFilterSubject').value;
+
+  let filtered = allMaterials;
+  if (typeF) filtered = filtered.filter(m => m.type === typeF);
+  if (subjF) filtered = filtered.filter(m => m.subject === subjF);
+  if (search) {
+    filtered = filtered.filter(m =>
+      (m.title || '').toLowerCase().includes(search) ||
+      (m.description || '').toLowerCase().includes(search) ||
+      (m.subject || '').toLowerCase().includes(search)
+    );
+  }
+
+  if (!filtered.length) {
+    $('materialsTable').innerHTML = '<div class="empty-state"><div class="emoji">📚</div><h3>No materials found</h3><p>Click "Add Material" to upload your first PDF.</p></div>';
+    return;
+  }
+
+  const rows = filtered.map(m => {
+    const meta = MAT_TYPE_META[m.type] || { label: m.type, emoji: '📄', color: '#64748B' };
+    const langLabel = m.language === 'hindi' ? 'हिन्दी' : m.language === 'both' ? 'EN+हिन्दी' : 'English';
+    const uploaded = m.uploadedAt?.toDate ? m.uploadedAt.toDate() : null;
+    const dateStr = uploaded ? uploaded.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
+    return `<tr>
+      <td>
+        <div class="post-name-cell">
+          <div class="post-icon" style="background:${meta.color}1a;font-size:20px;">${meta.emoji}</div>
+          <div class="post-name-text">
+            <strong>${escape(m.title || 'Untitled')}</strong>
+            <small>${escape(m.subject || '—')} · ${m.pages ? m.pages + 'p · ' : ''}${langLabel}</small>
+          </div>
+        </div>
+      </td>
+      <td><span class="dept-badge" style="background:${meta.color}1a;color:${meta.color};">${meta.label}</span></td>
+      <td>${m.pdfUrl ? `<a href="${escape(m.pdfUrl)}" target="_blank" rel="noopener" style="color:var(--primary);font-size:12px;text-decoration:none;">📄 Open PDF</a>` : '<span style="color:var(--text-light);font-size:12px;">No URL</span>'}</td>
+      <td style="color: var(--text-sec); font-size: 12px;">${dateStr}</td>
+      <td>
+        <div class="actions-cell">
+          <button class="icon-btn" title="Edit" data-edit-mat="${m.id}">✏️</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  $('materialsTable').innerHTML = `<table>
+    <thead><tr>
+      <th>Material</th><th>Type</th><th>PDF</th><th>Uploaded</th><th>Actions</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+
+  document.querySelectorAll('[data-edit-mat]').forEach(b => {
+    b.onclick = () => openMaterialModal(b.dataset.editMat);
+  });
+}
+
+// Filter listeners
+['matSearchInput', 'matFilterType', 'matFilterSubject'].forEach(id => {
+  const el = $(id);
+  if (el) {
+    el.addEventListener('input', renderMaterialsTable);
+    el.addEventListener('change', renderMaterialsTable);
+  }
+});
+
+// ─── MATERIAL MODAL ───
+$('newMaterialBtn').onclick = () => openMaterialModal(null);
+$('materialModalClose').onclick = () => closeMaterialModal();
+$('materialModalCancel').onclick = () => closeMaterialModal();
+$('materialModal').addEventListener('click', (e) => {
+  if (e.target.id === 'materialModal') closeMaterialModal();
+});
+
+function openMaterialModal(id) {
+  editingMaterialId = id;
+  $('materialModalTitle').textContent = id ? '✏️ Edit Material' : '➕ New Material';
+  $('saveMaterialBtn').textContent = id ? '💾 Update' : '💾 Save Material';
+  $('deleteMaterialBtn').classList.toggle('hidden', !id);
+  renderMatSubjectsDatalist();
+
+  if (id) {
+    const m = allMaterials.find(x => x.id === id);
+    if (!m) return;
+    $('m_title').value = m.title || '';
+    $('m_subject').value = m.subject || '';
+    $('m_type').value = m.type || 'notes';
+    $('m_language').value = m.language || 'english';
+    $('m_pdfUrl').value = m.pdfUrl || '';
+    $('m_pages').value = m.pages || '';
+    $('m_description').value = m.description || '';
+  } else {
+    ['m_title', 'm_subject', 'm_pdfUrl', 'm_pages', 'm_description']
+      .forEach(f => $(f).value = '');
+    $('m_type').value = 'notes';
+    $('m_language').value = 'english';
+  }
+
+  $('materialModal').classList.add('show');
+}
+
+function closeMaterialModal() {
+  $('materialModal').classList.remove('show');
+  editingMaterialId = null;
+}
+
+$('saveMaterialBtn').onclick = async () => {
+  const title = $('m_title').value.trim();
+  const subject = $('m_subject').value.trim();
+  const pdfUrl = $('m_pdfUrl').value.trim();
+  if (!title) { showToast('Title is required', 'error'); return; }
+  if (!subject) { showToast('Subject is required', 'error'); return; }
+  if (!pdfUrl) { showToast('PDF URL is required', 'error'); return; }
+
+  const data = {
+    title,
+    subject,
+    type: $('m_type').value,
+    language: $('m_language').value,
+    pdfUrl,
+    pages: $('m_pages').value ? Number($('m_pages').value) : null,
+    description: $('m_description').value.trim()
+  };
+
+  const btn = $('saveMaterialBtn');
+  btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Saving…';
+  btn.disabled = true;
+  try {
+    if (editingMaterialId) {
+      await db.collection('materials').doc(editingMaterialId).update(data);
+      showToast('Updated: ' + title, 'success');
+    } else {
+      data.uploadedAt = firebase.firestore.FieldValue.serverTimestamp();
+      await db.collection('materials').add(data);
+      showToast('Added: ' + title, 'success');
+    }
+    closeMaterialModal();
+    loadMaterials();
+  } catch (e) {
+    showToast('Save failed: ' + e.message, 'error');
+  }
+  btn.innerHTML = editingMaterialId ? '💾 Update' : '💾 Save Material';
+  btn.disabled = false;
+};
+
+$('deleteMaterialBtn').onclick = async () => {
+  if (!editingMaterialId) return;
+  const m = allMaterials.find(x => x.id === editingMaterialId);
+  if (!confirm(`Delete "${m?.title}"?\n\nThis only removes it from the app. The PDF on chaudharyyuva.in stays.`)) return;
+  try {
+    await db.collection('materials').doc(editingMaterialId).delete();
+    showToast('Deleted', 'success');
+    closeMaterialModal();
+    loadMaterials();
   } catch (e) {
     showToast('Delete failed: ' + e.message, 'error');
   }
