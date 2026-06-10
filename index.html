@@ -752,9 +752,9 @@
 
       <div class="stats-row">
         <div class="stat-card"><div class="label">Total Materials</div><div class="value" id="matStatTotal" style="color: var(--primary)">—</div></div>
-        <div class="stat-card"><div class="label">Subjects</div><div class="value" id="matStatSubjects" style="color: var(--success)">—</div></div>
-        <div class="stat-card"><div class="label">In Hindi</div><div class="value" id="matStatHindi" style="color: var(--accent)">—</div></div>
-        <div class="stat-card"><div class="label">In English</div><div class="value" id="matStatEnglish" style="color: var(--warning)">—</div></div>
+        <div class="stat-card"><div class="label">English</div><div class="value" id="matStatEnglish" style="color: var(--warning)">—</div></div>
+        <div class="stat-card"><div class="label">Hindi</div><div class="value" id="matStatHindi" style="color: var(--accent)">—</div></div>
+        <div class="stat-card"><div class="label">Gujarati</div><div class="value" id="matStatGujarati" style="color: var(--success)">—</div></div>
       </div>
 
       <div class="table-card">
@@ -1020,6 +1020,7 @@
           <select id="m_language">
             <option value="english">English</option>
             <option value="hindi">हिन्दी (Hindi)</option>
+            <option value="gujarati">ગુજરાતી (Gujarati)</option>
             <option value="both">Both (EN + हिन्दी)</option>
           </select>
         </div>
@@ -1858,9 +1859,9 @@ function extractMatSubjects() {
 
 function renderMatStats() {
   $('matStatTotal').textContent = allMaterials.length;
-  $('matStatSubjects').textContent = extractMatSubjects().length;
-  $('matStatHindi').textContent = allMaterials.filter(m => m.language === 'hindi' || m.language === 'both').length;
   $('matStatEnglish').textContent = allMaterials.filter(m => m.language === 'english' || m.language === 'both').length;
+  $('matStatHindi').textContent = allMaterials.filter(m => m.language === 'hindi' || m.language === 'both').length;
+  $('matStatGujarati').textContent = allMaterials.filter(m => m.language === 'gujarati').length;
 }
 
 function renderMatSubjectFilter() {
