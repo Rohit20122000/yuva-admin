@@ -668,7 +668,7 @@
       <a class="active" id="navGovPosts" data-section="gov-posts">📋 Government Posts</a>
       <a id="navMaterials" data-section="materials">📚 Study Materials</a>
       <a id="navAffairs" data-section="affairs">📰 Current Affairs</a>
-      <a id="navUsers">👥 Users</a>
+      <a id="navUsers" data-section="users">👥 Users</a>
       <a id="navAnalytics">📊 Analytics</a>
       <a id="navSettings">⚙️ Settings</a>
     </nav>
@@ -780,6 +780,40 @@
         </div>
         <div id="materialsTable">
           <div class="loading-overlay"><div class="spinner"></div><span>Loading materials…</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════
+         USERS SECTION
+         ════════════════════════════════════════════════ -->
+    <div class="section-view" id="sectionUsers">
+      <div class="page-header">
+        <div>
+          <h1>Users</h1>
+          <p>Aspirants using the Yuva app. Personal data (registration numbers, exam details) stays private — only summary info shown here.</p>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-card"><div class="label">Total Users</div><div class="value" id="userStatTotal" style="color: var(--primary)">—</div></div>
+        <div class="stat-card"><div class="label">This Week</div><div class="value" id="userStatWeek" style="color: var(--success)">—</div></div>
+        <div class="stat-card"><div class="label">Following Exams</div><div class="value" id="userStatFollowing" style="color: var(--accent)">—</div></div>
+        <div class="stat-card"><div class="label">Most Popular</div><div class="value" id="userStatTopExam" style="color: var(--warning); font-size:14px; line-height:1.4; margin-top:8px;">—</div></div>
+      </div>
+
+      <div class="table-card">
+        <div class="table-header">
+          <h2>All Users</h2>
+          <div class="table-tools">
+            <div class="search-box">
+              <span>🔍</span>
+              <input type="text" id="userSearchInput" placeholder="Search users…">
+            </div>
+          </div>
+        </div>
+        <div id="usersTable">
+          <div class="loading-overlay"><div class="spinner"></div><span>Loading users…</span></div>
         </div>
       </div>
     </div>
@@ -1198,6 +1232,9 @@ document.querySelectorAll('.sidebar nav a').forEach(link => {
     } else if (section === 'affairs') {
       $('sectionAffairs').classList.add('active');
       loadAffairs();
+    } else if (section === 'users') {
+      $('sectionUsers').classList.add('active');
+      loadUsers();
     }
   });
 });
@@ -2131,6 +2168,195 @@ async function deleteAffair(id, title) {
   }
 }
 
+// ═════════════════════ USERS ═════════════════════
+let allUsers = [];
+let userExpandedId = null;
+
+async function loadUsers() {
+  try {
+    // Make sure allPosts is loaded so we can resolve postId → name
+    if (!allPosts || allPosts.length === 0) {
+      const postsSnap = await db.collection('gov_posts').get();
+      allPosts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    }
+
+    const usersSnap = await db.collection('users').get();
+    allUsers = await Promise.all(usersSnap.docs.map(async d => {
+      const data = d.data();
+      const followedSnap = await db.collection('users').doc(d.id).collection('followed_posts').get();
+      return {
+        uid: d.id,
+        email: data.email || '—',
+        name: data.name || data.username || data.displayName || (data.email ? data.email.split('@')[0] : 'User'),
+        phone: data.phone || data.phoneNumber || '',
+        createdAt: data.created_at?.toDate?.() || data.createdAt?.toDate?.() || data.signupDate?.toDate?.() || null,
+        lastSeen: data.last_seen?.toDate?.() || data.lastSeen?.toDate?.() || null,
+        followedCount: followedSnap.size,
+        followedIds: followedSnap.docs.map(f => f.id),
+        followedAt: followedSnap.docs.reduce((acc, f) => {
+          const t = f.data().followed_at?.toDate?.();
+          if (t) acc[f.id] = t;
+          return acc;
+        }, {}),
+        hasFcmToken: !!data.fcmToken,
+      };
+    }));
+    renderUserStats();
+    renderUsersTable();
+  } catch (e) {
+    console.error(e);
+    showToast('Failed to load users: ' + e.message, 'error');
+    $('usersTable').innerHTML = '<div class="empty-state"><div class="emoji">❌</div><h3>Error</h3><p>' + e.message + '</p></div>';
+  }
+}
+
+function renderUserStats() {
+  $('userStatTotal').textContent = allUsers.length;
+
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  $('userStatWeek').textContent = allUsers.filter(u => u.createdAt && u.createdAt > weekAgo).length;
+
+  $('userStatFollowing').textContent = allUsers.filter(u => u.followedCount > 0).length;
+
+  const counts = {};
+  allUsers.forEach(u => u.followedIds.forEach(id => { counts[id] = (counts[id] || 0) + 1; }));
+  let topExam = '—', topCount = 0;
+  for (const id in counts) {
+    if (counts[id] > topCount) {
+      topCount = counts[id];
+      topExam = allPosts.find(p => p.id === id)?.name || id;
+    }
+  }
+  $('userStatTopExam').textContent = topCount > 0 ? `${topExam} (${topCount})` : '—';
+}
+
+function maskEmail(email) {
+  if (!email || !email.includes('@')) return email;
+  const [user, domain] = email.split('@');
+  if (user.length <= 3) return user[0] + '***@' + domain;
+  return user.substring(0, 3) + '***@' + domain;
+}
+
+function formatRelativeDate(d) {
+  if (!d) return '—';
+  const diffMs = Date.now() - d.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return 'today';
+  if (diffDays === 1) return 'yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatFullDate(d) {
+  if (!d) return '—';
+  return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) +
+    ' · ' + d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderUsersTable() {
+  const search = $('userSearchInput').value.toLowerCase();
+  let filtered = allUsers;
+  if (search) {
+    filtered = filtered.filter(u =>
+      u.name.toLowerCase().includes(search) ||
+      u.email.toLowerCase().includes(search)
+    );
+  }
+
+  if (!filtered.length) {
+    $('usersTable').innerHTML = '<div class="empty-state"><div class="emoji">👥</div><h3>No users yet</h3><p>Users will appear here when they sign up.</p></div>';
+    return;
+  }
+
+  filtered.sort((a, b) => (b.createdAt?.getTime() || 0) - (a.createdAt?.getTime() || 0));
+
+  const rows = filtered.map(u => {
+    const initial = (u.name[0] || '?').toUpperCase();
+    const isExpanded = userExpandedId === u.uid;
+    let expandedRow = '';
+    if (isExpanded) {
+      const followedItems = u.followedIds.map(id => {
+        const post = allPosts.find(p => p.id === id);
+        const name = post ? post.name : id;
+        const followedDate = u.followedAt[id];
+        return `<div style="display:inline-flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);padding:6px 10px;border-radius:8px;margin:0 6px 6px 0;font-size:12px;">
+          <strong style="color:var(--primary);">${escape(name)}</strong>
+          ${followedDate ? `<span style="color:var(--text-light);font-size:10px;">· ${formatRelativeDate(followedDate)}</span>` : ''}
+        </div>`;
+      });
+      const followingList = followedItems.length === 0
+        ? '<span style="color:var(--text-light); font-size:12px;font-style:italic;">Not following any exam yet</span>'
+        : followedItems.join('');
+
+      expandedRow = `<tr><td colspan="4" style="padding:0;">
+        <div style="background:#FAFBFF;padding:18px 20px;border-top:1px solid var(--border);">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:16px;">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">📅 Joined Yuva</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);">${formatFullDate(u.createdAt)}</div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">👁 Last Seen</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text);">${u.lastSeen ? formatFullDate(u.lastSeen) : '<span style="color:var(--text-light);font-weight:400;">Not tracked</span>'}</div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">🔔 Push Notifications</div>
+              <div style="font-size:13px;font-weight:600;color:${u.hasFcmToken ? 'var(--success)' : 'var(--text-light)'};">${u.hasFcmToken ? '✓ Enabled' : '✗ Not registered'}</div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;">🆔 User ID</div>
+              <code style="background:#fff;padding:3px 8px;border-radius:6px;font-size:11px;border:1px solid var(--border);color:var(--text-sec);">${u.uid.substring(0, 18)}…</code>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">📋 Exams Following (${u.followedCount})</div>
+            <div>${followingList}</div>
+          </div>
+        </div>
+      </td></tr>`;
+    }
+
+    return `<tr style="cursor:pointer;" data-toggle-user="${u.uid}">
+      <td>
+        <div class="post-name-cell">
+          <div class="post-icon" style="background:var(--primary);color:#fff;font-size:14px;font-weight:700;">${initial}</div>
+          <div class="post-name-text">
+            <strong>${escape(u.name)}</strong>
+            <small>${escape(maskEmail(u.email))}</small>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span style="font-size:13px;font-weight:700;color:${u.followedCount > 0 ? 'var(--success)' : 'var(--text-light)'};">
+          ${u.followedCount} ${u.followedCount === 1 ? 'exam' : 'exams'}
+        </span>
+      </td>
+      <td style="color: var(--text-sec); font-size: 12px;">${formatRelativeDate(u.createdAt)}</td>
+      <td><span style="font-size:18px;color:var(--text-sec);">${isExpanded ? '▴' : '▾'}</span></td>
+    </tr>${expandedRow}`;
+  }).join('');
+
+  $('usersTable').innerHTML = `<table>
+    <thead><tr>
+      <th>User</th><th>Following</th><th>Joined</th><th></th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+
+  document.querySelectorAll('[data-toggle-user]').forEach(row => {
+    row.onclick = () => {
+      const id = row.dataset.toggleUser;
+      userExpandedId = (userExpandedId === id) ? null : id;
+      renderUsersTable();
+    };
+  });
+}
+
+const userSearchEl = $('userSearchInput');
+if (userSearchEl) userSearchEl.addEventListener('input', renderUsersTable);
+
 // ═════════════════════ HELPERS ═════════════════════
 $('categoriesModalClose').onclick = () => tryCloseCategoriesModal();
 $('cancelModalBtn').onclick = () => tryCloseCategoriesModal();
@@ -2150,52 +2376,6 @@ function showToast(msg, type = 'success') {
 
 function escape(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-
-  // ─── NOTIFY NEW MATERIAL ───
-exports.notifyNewMaterial = onDocumentCreated({
-  document: 'materials/{materialId}',
-  region: 'asia-south1'
-}, async (event) => {
-  const data = event.data?.data();
-  if (!data) return;
-
-  const title = data.title || 'New Material';
-  const subject = data.subject || '';
-  const type = data.type || 'notes';
-
-  const typeLabelsEn = {
-    notes: 'Study Notes',
-    practice_sets: 'Practice Set',
-    previous_papers: 'Previous Year Paper',
-    reference_books: 'Reference Book',
-    magazines: 'Magazine'
-  };
-  const typeLabelsHi = {
-    notes: 'अध्ययन सामग्री',
-    practice_sets: 'अभ्यास सेट',
-    previous_papers: 'पिछले वर्ष का पेपर',
-    reference_books: 'संदर्भ पुस्तक',
-    magazines: 'पत्रिका'
-  };
-
-  const typeEn = typeLabelsEn[type] || 'Material';
-  const typeHi = typeLabelsHi[type] || 'सामग्री';
-  const body = subject
-    ? `📚 New ${typeEn} in ${subject} · ${subject} में ${typeHi}`
-    : `📚 New ${typeEn} · ${typeHi}`;
-
-  const message = {
-    notification: { title, body },
-    topic: 'all_users'
-  };
-
-  try {
-    await getMessaging().send(message);
-    console.log('Material notification sent:', title);
-  } catch (e) {
-    console.error('Failed to send material notification:', e);
-  }
-});
 }
 </script>
 </body>
