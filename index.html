@@ -2150,6 +2150,52 @@ function showToast(msg, type = 'success') {
 
 function escape(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // ─── NOTIFY NEW MATERIAL ───
+exports.notifyNewMaterial = onDocumentCreated({
+  document: 'materials/{materialId}',
+  region: 'asia-south1'
+}, async (event) => {
+  const data = event.data?.data();
+  if (!data) return;
+
+  const title = data.title || 'New Material';
+  const subject = data.subject || '';
+  const type = data.type || 'notes';
+
+  const typeLabelsEn = {
+    notes: 'Study Notes',
+    practice_sets: 'Practice Set',
+    previous_papers: 'Previous Year Paper',
+    reference_books: 'Reference Book',
+    magazines: 'Magazine'
+  };
+  const typeLabelsHi = {
+    notes: 'अध्ययन सामग्री',
+    practice_sets: 'अभ्यास सेट',
+    previous_papers: 'पिछले वर्ष का पेपर',
+    reference_books: 'संदर्भ पुस्तक',
+    magazines: 'पत्रिका'
+  };
+
+  const typeEn = typeLabelsEn[type] || 'Material';
+  const typeHi = typeLabelsHi[type] || 'सामग्री';
+  const body = subject
+    ? `📚 New ${typeEn} in ${subject} · ${subject} में ${typeHi}`
+    : `📚 New ${typeEn} · ${typeHi}`;
+
+  const message = {
+    notification: { title, body },
+    topic: 'all_users'
+  };
+
+  try {
+    await getMessaging().send(message);
+    console.log('Material notification sent:', title);
+  } catch (e) {
+    console.error('Failed to send material notification:', e);
+  }
+});
 }
 </script>
 </body>
