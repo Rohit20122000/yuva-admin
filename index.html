@@ -2182,7 +2182,8 @@ async function loadUsers() {
     }
 
     // Call the Cloud Function that merges Firebase Auth + Firestore
-    const fn = firebase.functions('asia-south1').httpsCallable('listAllUsersForAdmin');
+    const functions = firebase.app().functions('asia-south1');
+    const fn = functions.httpsCallable('listAllUsersForAdmin');
     const result = await fn();
     const users = result.data?.users || [];
 
