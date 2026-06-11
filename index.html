@@ -1117,6 +1117,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-functions-compat.js"></script>
 <script>
 // ╔══════════════════════════════════════════════════════════╗
 // ║  🔥 FIREBASE CONFIG                                       ║
@@ -2174,33 +2175,35 @@ let userExpandedId = null;
 
 async function loadUsers() {
   try {
-    // Make sure allPosts is loaded so we can resolve postId → name
+    // Make sure gov_posts loaded so we can resolve postId → name
     if (!allPosts || allPosts.length === 0) {
       const postsSnap = await db.collection('gov_posts').get();
       allPosts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
     }
 
-    const usersSnap = await db.collection('users').get();
-    allUsers = await Promise.all(usersSnap.docs.map(async d => {
-      const data = d.data();
-      const followedSnap = await db.collection('users').doc(d.id).collection('followed_posts').get();
-      return {
-        uid: d.id,
-        email: data.email || '—',
-        name: data.name || data.username || data.displayName || (data.email ? data.email.split('@')[0] : 'User'),
-        phone: data.phone || data.phoneNumber || '',
-        createdAt: data.created_at?.toDate?.() || data.createdAt?.toDate?.() || data.signupDate?.toDate?.() || null,
-        lastSeen: data.last_seen?.toDate?.() || data.lastSeen?.toDate?.() || null,
-        followedCount: followedSnap.size,
-        followedIds: followedSnap.docs.map(f => f.id),
-        followedAt: followedSnap.docs.reduce((acc, f) => {
-          const t = f.data().followed_at?.toDate?.();
-          if (t) acc[f.id] = t;
-          return acc;
-        }, {}),
-        hasFcmToken: !!data.fcmToken,
-      };
+    // Call the Cloud Function that merges Firebase Auth + Firestore
+    const fn = firebase.functions('asia-south1').httpsCallable('listAllUsersForAdmin');
+    const result = await fn();
+    const users = result.data?.users || [];
+
+    allUsers = users.map(u => ({
+      uid: u.uid,
+      email: u.email || '—',
+      name: u.name || (u.email ? u.email.split('@')[0] : 'User'),
+      username: u.username,
+      phone: u.phone,
+      createdAt: u.createdAtMs ? new Date(u.createdAtMs) : null,
+      lastSeen: u.lastSignInMs ? new Date(u.lastSignInMs) : null,
+      hasFcmToken: u.hasFcmToken,
+      emailVerified: u.emailVerified,
+      disabled: u.disabled,
+      followedCount: u.followedCount,
+      followedIds: u.followedIds,
+      followedAt: Object.fromEntries(
+        Object.entries(u.followedAt || {}).map(([k, v]) => [k, new Date(v)])
+      ),
     }));
+
     renderUserStats();
     renderUsersTable();
   } catch (e) {
