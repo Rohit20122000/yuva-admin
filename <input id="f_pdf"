@@ -1084,6 +1084,10 @@
           <input type="url" id="f_pdf" placeholder="https://…">
         </div>
         <div class="form-group full">
+          <label>Syllabus PDF URL</label>
+          <input type="url" id="f_syllabus" placeholder="https://… official syllabus PDF">
+        </div>
+        <div class="form-group full">
           <label>Apply Portal Link</label>
           <input type="url" id="f_apply" placeholder="https://…">
         </div>
@@ -1889,13 +1893,14 @@ function openPostModal(id) {
     $('f_exam_date').value = c.exam_date || '';
     $('f_result_date').value = c.result_date || '';
     $('f_pdf').value = c.notification_pdf_url || '';
+    $('f_syllabus').value = c.syllabus_pdf_url || '';
     $('f_apply').value = c.apply_link || '';
     $('f_notes_en').value = c.notes_en || '';
     $('f_notes_hi').value = c.notes_hi || '';
   } else {
     ['f_name','f_full_name','f_desc_en','f_desc_hi','f_min_age','f_max_age',
      'f_qualification','f_stages','f_website','f_notification_date','f_form_start',
-     'f_form_end','f_exam_date','f_result_date','f_pdf','f_apply','f_notes_en','f_notes_hi']
+     'f_form_end','f_exam_date','f_result_date','f_pdf','f_syllabus','f_apply','f_notes_en','f_notes_hi']
       .forEach(field => $(field).value = '');
     $('f_scope').value = 'Central';
     $('f_department').value = DEPARTMENTS.filter(d => d !== 'All')[0] || 'UPSC';
@@ -1937,6 +1942,7 @@ $('savePostBtn').onclick = async () => {
       exam_date: $('f_exam_date').value || null,
       result_date: $('f_result_date').value || null,
       notification_pdf_url: $('f_pdf').value.trim(),
+      syllabus_pdf_url: $('f_syllabus').value.trim(),
       apply_link: $('f_apply').value.trim(),
       notes_en: $('f_notes_en').value.trim(),
       notes_hi: $('f_notes_hi').value.trim(),
