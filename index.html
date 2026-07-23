@@ -1927,6 +1927,7 @@ function openPostModal(id) {
     $('f_vacancies').value = c.total_vacancies || '';
     $('f_fee').value = c.application_fee || '';
     $('f_pay').value = c.pay_scale || '';
+    $('f_stage').value = c.current_stage || '';
     $('f_apply').value = c.apply_link || '';
     $('f_notes_en').value = c.notes_en || '';
     $('f_notes_hi').value = c.notes_hi || '';
@@ -1980,6 +1981,7 @@ $('savePostBtn').onclick = async () => {
       total_vacancies: $('f_vacancies').value.trim(),
       application_fee: $('f_fee').value.trim(),
       pay_scale: $('f_pay').value.trim(),
+      current_stage: $('f_stage').value.trim(),
       apply_link: $('f_apply').value.trim(),
       notes_en: $('f_notes_en').value.trim(),
       notes_hi: $('f_notes_hi').value.trim(),
