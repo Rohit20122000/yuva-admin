@@ -346,6 +346,9 @@
   .status-exam_scheduled { color: var(--s-exam); background: rgba(255,107,53,.12); }
   .status-exam_completed { color: var(--s-completed); background: rgba(168,85,247,.12); }
   .status-result_out { color: var(--s-result); background: rgba(20,184,166,.12); }
+  .status-answer_key_out { color: #0EA5E9; background: rgba(14,165,233,.12); }
+  .status-merit_list_out { color: #F43F5E; background: rgba(244,63,94,.12); }
+  .status-final_result { color: #EAB308; background: rgba(234,179,8,.12); }  
   .actions-cell { display: flex; gap: 6px; }
   .icon-btn {
     width: 32px; height: 32px;
@@ -759,7 +762,10 @@
               <option value="admit_card_out">Admit card out</option>
               <option value="exam_scheduled">Exam scheduled</option>
               <option value="exam_completed">Exam completed</option>
+              <option value="answer_key_out">Answer Key out</option>
               <option value="result_out">Result out</option>
+              <option value="merit_list_out">Merit List / DV</option>
+              <option value="final_result">Final Selection</option>
             </select>
             <div class="search-box">
               <span>🔍</span>
@@ -2501,7 +2507,10 @@ const STATUS_META = {
   admit_card_out: { label: 'Admit card out', color: '#06B6D4' },
   exam_scheduled: { label: 'Exam scheduled', color: '#FF6B35' },
   exam_completed: { label: 'Exam completed', color: '#A855F7' },
+  answer_key_out: { label: 'Answer Key out', color: '#0EA5E9' },
   result_out: { label: 'Result out', color: '#14B8A6' },
+  merit_list_out: { label: 'Merit List / DV', color: '#F43F5E' },
+  final_result: { label: 'Final Selection', color: '#EAB308' },
 };
 
 async function loadAnalytics() {
