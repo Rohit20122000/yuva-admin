@@ -1053,6 +1053,22 @@
 
         <div class="form-section">// Current Cycle</div>
         <div class="form-group">
+          <div class="form-group">
+          <label>Advt. No. / જાહેરાત ક્રમાંક</label>
+          <input type="text" id="f_advt" placeholder="GSRTC/202627/32">
+        </div>
+        <div class="form-group">
+          <label>Total Vacancies</label>
+          <input type="text" id="f_vacancies" placeholder="4,318">
+        </div>
+        <div class="form-group">
+          <label>Application Fee</label>
+          <input type="text" id="f_fee" placeholder="Gen ₹500 / SC-ST-Female ₹0">
+        </div>
+        <div class="form-group">
+          <label>Pay Scale / Salary</label>
+          <input type="text" id="f_pay" placeholder="₹26,000 fixed (5 yrs)">
+        </div>
           <label>Status *</label>
           <select id="f_status">
             <option value="no_announcement">No announcement</option>
@@ -1903,13 +1919,17 @@ function openPostModal(id) {
     $('f_result_date').value = c.result_date || '';
     $('f_pdf').value = c.notification_pdf_url || '';
     $('f_syllabus').value = c.syllabus_pdf_url || '';
+    $('f_advt').value = c.advt_no || '';
+    $('f_vacancies').value = c.total_vacancies || '';
+    $('f_fee').value = c.application_fee || '';
+    $('f_pay').value = c.pay_scale || '';
     $('f_apply').value = c.apply_link || '';
     $('f_notes_en').value = c.notes_en || '';
     $('f_notes_hi').value = c.notes_hi || '';
   } else {
     ['f_name','f_full_name','f_desc_en','f_desc_hi','f_min_age','f_max_age',
      'f_qualification','f_stages','f_website','f_notification_date','f_form_start',
-     'f_form_end','f_exam_date','f_result_date','f_pdf','f_syllabus','f_apply','f_notes_en','f_notes_hi']
+     'f_form_end','f_exam_date','f_result_date','f_pdf','f_syllabus','f_advt','f_vacancies','f_fee','f_pay','f_apply','f_notes_en','f_notes_hi']
       .forEach(field => $(field).value = '');
     $('f_scope').value = 'Central';
     $('f_department').value = DEPARTMENTS.filter(d => d !== 'All')[0] || 'UPSC';
@@ -1952,6 +1972,10 @@ $('savePostBtn').onclick = async () => {
       result_date: $('f_result_date').value || null,
       notification_pdf_url: $('f_pdf').value.trim(),
       syllabus_pdf_url: $('f_syllabus').value.trim(),
+      advt_no: $('f_advt').value.trim(),
+      total_vacancies: $('f_vacancies').value.trim(),
+      application_fee: $('f_fee').value.trim(),
+      pay_scale: $('f_pay').value.trim(),
       apply_link: $('f_apply').value.trim(),
       notes_en: $('f_notes_en').value.trim(),
       notes_hi: $('f_notes_hi').value.trim(),
