@@ -658,17 +658,138 @@
   .quick-link small { display: block; color: var(--text-sec); font-weight: 400; font-size: 11px; }
   .quick-links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
+  /* ═══════ ACCORDION FORM SECTIONS ═══════ */
+  details.fsec { border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px; background: #FAFBFF; overflow: hidden; }
+  details.fsec summary {
+    cursor: pointer; list-style: none; user-select: none;
+    font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--primary); padding: 13px 16px;
+    display: flex; align-items: center; gap: 8px;
+    background: #F3F4FF;
+  }
+  details.fsec summary::-webkit-details-marker { display: none; }
+  details.fsec summary::before { content: '▸'; transition: transform .15s; font-size: 13px; }
+  details.fsec[open] summary::before { transform: rotate(90deg); }
+  details.fsec .fsec-body { padding: 16px; }
+  details.fsec summary .fsec-count { margin-left: auto; font-size: 10px; font-weight: 700; color: var(--text-light); letter-spacing: 0; text-transform: none; }
+
+  /* ═══════ INLINE STATUS SELECT (pill style) ═══════ */
+  .pill-select {
+    appearance: none; -webkit-appearance: none;
+    border: 1.5px solid transparent; border-radius: 999px;
+    padding: 5px 26px 5px 12px;
+    font-family: inherit; font-size: 11px; font-weight: 700;
+    cursor: pointer; max-width: 100%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2364748B' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 10px center;
+    transition: box-shadow .15s;
+  }
+  .pill-select:focus { outline: none; box-shadow: 0 0 0 3px rgba(79,70,229,.18); }
+
+  /* ═══════ NEEDS ATTENTION PANEL ═══════ */
+  .attention-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
+  .attention-summary {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px; cursor: pointer; user-select: none;
+    font-weight: 700; font-size: 14px;
+  }
+  .attention-summary .att-chevron { margin-left: auto; transition: transform .15s; color: var(--text-light); }
+  .attention-card.open .att-chevron { transform: rotate(90deg); }
+  .attention-body { display: none; border-top: 1px solid var(--border); padding: 8px 12px 14px; }
+  .attention-card.open .attention-body { display: block; }
+  .att-group-title { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--text-sec); padding: 10px 8px 6px; }
+  .att-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 10px; cursor: pointer;
+    font-size: 13px; transition: background .15s;
+  }
+  .att-item:hover { background: var(--bg); }
+  .att-item .att-badge { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--text-sec); white-space: nowrap; }
+  .att-healthy { display: flex; align-items: center; gap: 10px; padding: 14px 20px; font-weight: 700; font-size: 14px; color: var(--success); }
+
+  /* ═══════ BACKUP REMINDER BANNER ═══════ */
+  .backup-banner {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    background: #FFF7ED; border: 1px solid #FDBA74; color: #9A3412;
+    border-radius: 12px; padding: 12px 16px; margin-bottom: 18px;
+    font-size: 13px; font-weight: 600;
+  }
+  .backup-banner .bb-actions { margin-left: auto; display: flex; gap: 8px; }
+  .backup-banner button { border: none; border-radius: 8px; padding: 7px 14px; font-family: inherit; font-weight: 700; font-size: 12px; cursor: pointer; }
+  .backup-banner .bb-export { background: var(--accent); color: #fff; }
+  .backup-banner .bb-dismiss { background: transparent; color: #9A3412; }
+
+  /* ═══════ HAMBURGER + SIDEBAR (mobile) ═══════ */
+  .hamburger {
+    display: none;
+    position: fixed; top: 14px; left: 14px; z-index: 160;
+    width: 44px; height: 44px;
+    border: none; border-radius: 12px;
+    background: var(--primary-dark); color: #fff;
+    font-size: 20px; cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,.25);
+    align-items: center; justify-content: center;
+  }
+  .sidebar-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(15,23,42,.5); z-index: 140;
+  }
+  .sidebar-backdrop.show { display: block; }
+
   /* Mobile */
   @media (max-width: 900px) {
-    .sidebar { display: none; }
-    .main { margin-left: 0; padding: 16px; }
+    .hamburger { display: flex; }
+    .sidebar {
+      transform: translateX(-105%);
+      transition: transform .25s ease;
+      width: 270px;
+      box-shadow: 8px 0 30px rgba(0,0,0,.3);
+      z-index: 150;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; padding: 70px 14px 24px; }
     .stats-row { grid-template-columns: repeat(2, 1fr); }
     .form-grid, .form-grid-3 { grid-template-columns: 1fr; }
-    .modal { width: 100%; }
     .login-card { width: 90%; padding: 32px 24px; }
     .search-box { width: 100%; }
     .ana-grid { grid-template-columns: 1fr; }
     .quick-links-grid { grid-template-columns: 1fr; }
+    .table-tools { width: 100%; flex-wrap: wrap; }
+    .table-tools .select-small { flex: 1; min-width: 130px; }
+    .filter-tabs { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .filter-tabs::-webkit-scrollbar { display: none; }
+    .page-header h1 { font-size: 22px; }
+  }
+
+  /* Phone: modal fullscreen + table becomes cards */
+  @media (max-width: 768px) {
+    .modal-overlay { padding: 0; }
+    .modal { width: 100%; min-height: 100dvh; border-radius: 0; display: flex; flex-direction: column; }
+    .modal-header { border-radius: 0; }
+    .modal-body { flex: 1; }
+    .modal-footer { position: sticky; bottom: 0; background: var(--card); z-index: 2; border-radius: 0; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+    .modal input, .modal select, .modal textarea { font-size: 16px; min-height: 44px; }
+    .modal textarea { min-height: 72px; }
+
+    /* Posts table → stacked cards */
+    #postsTable table, #postsTable tbody, #postsTable tr, #postsTable td { display: block; width: 100%; }
+    #postsTable thead { display: none; }
+    #postsTable tr {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; margin-bottom: 12px; padding: 14px;
+      box-shadow: var(--shadow);
+    }
+    #postsTable td { border: none !important; padding: 5px 0 !important; }
+    #postsTable td[data-label]::before {
+      content: attr(data-label);
+      display: block; font-size: 10px; font-weight: 800;
+      letter-spacing: .07em; text-transform: uppercase;
+      color: var(--text-light); margin-bottom: 3px;
+    }
+    #postsTable td[data-label="Bharti"]::before { display: none; }
+    #postsTable .actions-cell { justify-content: flex-start; }
+    #postsTable .icon-btn { width: 100%; height: 42px; border-radius: 10px; background: #EEF2FF; display: flex; gap: 8px; }
+    #postsTable .icon-btn .edit-word { display: inline !important; }
   }
 </style>
 </head>
@@ -698,6 +819,9 @@
 
 <!-- ═══════ ADMIN APP ═══════ -->
 <div class="admin-app" id="adminApp">
+
+  <button class="hamburger" id="hamburgerBtn" title="Menu">☰</button>
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -736,6 +860,9 @@
         </div>
         <button class="btn btn-accent" id="newPostBtn">➕ Add New Post</button>
       </div>
+
+      <div id="backupBanner"></div>
+      <div id="attentionPanel"></div>
 
       <div class="stats-row">
         <div class="stat-card"><div class="label">Total Posts</div><div class="value" id="statTotal" style="color: var(--primary)">—</div></div>
@@ -993,143 +1120,161 @@
       <button class="modal-close" id="postModalClose">✕</button>
     </div>
     <div class="modal-body">
-      <div class="form-grid">
 
-        <div class="form-section">// Basics</div>
-        <div class="form-group">
-          <label>Short Name *</label>
-          <input type="text" id="f_name" placeholder="SSC CGL">
-        </div>
-        <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" id="f_full_name" placeholder="Staff Selection Commission – Combined Graduate Level">
-        </div>
-        <div class="form-group">
-          <label>Scope *</label>
-          <select id="f_scope">
-            <option value="Central">Central</option>
-            <option value="Gujarat">Gujarat</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Department *</label>
-          <select id="f_department"></select>
-        </div>
-
-        <div class="form-section">// Description (Bilingual)</div>
-        <div class="form-group full">
-          <label>Description (English)</label>
-          <textarea id="f_desc_en" rows="3" placeholder="What this exam/post is about…"></textarea>
-        </div>
-        <div class="form-group full">
-          <label>Description (हिन्दी)</label>
-          <textarea id="f_desc_hi" rows="3" placeholder="यह परीक्षा/पद किस बारे में है…"></textarea>
-        </div>
-
-        <div class="form-section">// Eligibility</div>
-        <div class="form-group">
-          <label>Min Age</label>
-          <input type="number" id="f_min_age" min="0" max="100" placeholder="18">
-        </div>
-        <div class="form-group">
-          <label>Max Age</label>
-          <input type="number" id="f_max_age" min="0" max="100" placeholder="32">
-        </div>
-        <div class="form-group full">
-          <label>Qualification</label>
-          <input type="text" id="f_qualification" placeholder="Bachelor's degree from a recognized university">
-        </div>
-
-        <div class="form-section">// Selection &amp; Links</div>
-        <div class="form-group full">
-          <label>Selection Stages (in order)</label>
-          <input type="text" id="f_stages" placeholder="Tier 1, Tier 2, Skill Test, Document Verification">
-          <div class="hint">Comma-separated. Order matters. e.g. for Police: "Physical Test, Written, Document Verification"</div>
-        </div>
-        <div class="form-group full">
-          <label>Official Website</label>
-          <input type="url" id="f_website" placeholder="https://ssc.nic.in">
-        </div>
-
-        <div class="form-section">// Current Cycle</div>
-        <div class="form-group">
+      <details class="fsec" open>
+        <summary>// Basics</summary>
+        <div class="fsec-body form-grid">
           <div class="form-group">
-          <label>Advt. No. / જાહેરાત ક્રમાંક</label>
-          <input type="text" id="f_advt" placeholder="GSRTC/202627/32">
-        </div>
-        <div class="form-group">
-          <label>Total Vacancies</label>
-          <input type="text" id="f_vacancies" placeholder="4,318">
-        </div>
-        <div class="form-group">
-          <label>Application Fee</label>
-          <input type="text" id="f_fee" placeholder="Gen ₹500 / SC-ST-Female ₹0">
-        </div>
-        <div class="form-group">
-          <label>Pay Scale / Salary</label>
-          <input type="text" id="f_pay" placeholder="₹26,000 fixed (5 yrs)">
-        </div>
+            <label>Short Name *</label>
+            <input type="text" id="f_name" placeholder="SSC CGL">
+          </div>
           <div class="form-group">
-          <label>Current Stage (Prelims/Mains/Tier…)</label>
-          <input type="text" id="f_stage" placeholder="Mains">
+            <label>Full Name</label>
+            <input type="text" id="f_full_name" placeholder="Staff Selection Commission – Combined Graduate Level">
+          </div>
+          <div class="form-group">
+            <label>Scope *</label>
+            <select id="f_scope">
+              <option value="Central">Central</option>
+              <option value="Gujarat">Gujarat</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Department *</label>
+            <select id="f_department"></select>
+          </div>
         </div>
-          <label>Status *</label>
-          <select id="f_status">
-            <option value="no_announcement">No announcement</option>
-            <option value="notification_out">Notification out</option>
-            <option value="form_open">Form open</option>
-            <option value="form_closed">Form closed</option>
-            <option value="admit_card_out">Admit Card / Call Letter out</option>
-            <option value="exam_scheduled">Exam scheduled</option>
-            <option value="exam_completed">Exam completed</option>
-            <option value="answer_key_out">Answer Key out</option>
-            <option value="result_out">Result out</option>
-            <option value="merit_list_out">Merit List / DV</option>
-            <option value="final_result">Final Selection</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Notification Date</label>
-          <input type="date" id="f_notification_date">
-        </div>
-        <div class="form-group">
-          <label>Form Opens</label>
-          <input type="date" id="f_form_start">
-        </div>
-        <div class="form-group">
-          <label>Form Closes</label>
-          <input type="date" id="f_form_end">
-        </div>
-        <div class="form-group">
-          <label>Exam Date</label>
-          <input type="date" id="f_exam_date">
-        </div>
-        <div class="form-group">
-          <label>Result Date</label>
-          <input type="date" id="f_result_date">
-        </div>
-        <div class="form-group full">
-          <label>Notification PDF URL</label>
-          <input type="url" id="f_pdf" placeholder="https://…">
-        </div>
-        <div class="form-group full">
-          <label>Syllabus PDF URL</label>
-          <input type="url" id="f_syllabus" placeholder="https://… official syllabus PDF">
-        </div>
-        <div class="form-group full">
-          <label>Apply Portal Link</label>
-          <input type="url" id="f_apply" placeholder="https://…">
-        </div>
-        <div class="form-group full">
-          <label>Notes (English)</label>
-          <textarea id="f_notes_en" rows="2"></textarea>
-        </div>
-        <div class="form-group full">
-          <label>Notes (हिन्दी)</label>
-          <textarea id="f_notes_hi" rows="2"></textarea>
-        </div>
+      </details>
 
-      </div>
+      <details class="fsec">
+        <summary>// Description (Bilingual)</summary>
+        <div class="fsec-body form-grid">
+          <div class="form-group full">
+            <label>Description (English)</label>
+            <textarea id="f_desc_en" rows="3" placeholder="What this exam/post is about…"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>Description (हिन्दी)</label>
+            <textarea id="f_desc_hi" rows="3" placeholder="यह परीक्षा/पद किस बारे में है…"></textarea>
+          </div>
+        </div>
+      </details>
+
+      <details class="fsec">
+        <summary>// Eligibility</summary>
+        <div class="fsec-body form-grid">
+          <div class="form-group">
+            <label>Min Age</label>
+            <input type="number" id="f_min_age" min="0" max="100" placeholder="18">
+          </div>
+          <div class="form-group">
+            <label>Max Age</label>
+            <input type="number" id="f_max_age" min="0" max="100" placeholder="32">
+          </div>
+          <div class="form-group full">
+            <label>Qualification</label>
+            <input type="text" id="f_qualification" placeholder="Bachelor's degree from a recognized university">
+          </div>
+        </div>
+      </details>
+
+      <details class="fsec">
+        <summary>// Selection &amp; Links</summary>
+        <div class="fsec-body form-grid">
+          <div class="form-group full">
+            <label>Selection Stages (in order)</label>
+            <input type="text" id="f_stages" placeholder="Tier 1, Tier 2, Skill Test, Document Verification">
+            <div class="hint">Comma-separated. Order matters. e.g. for Police: "Physical Test, Written, Document Verification"</div>
+          </div>
+          <div class="form-group full">
+            <label>Official Website</label>
+            <input type="url" id="f_website" placeholder="https://ssc.nic.in">
+          </div>
+        </div>
+      </details>
+
+      <details class="fsec" open>
+        <summary>// Current Cycle</summary>
+        <div class="fsec-body form-grid">
+          <div class="form-group">
+            <label>Advt. No. / જાહેરાત ક્રમાંક</label>
+            <input type="text" id="f_advt" placeholder="GSRTC/202627/32">
+          </div>
+          <div class="form-group">
+            <label>Total Vacancies</label>
+            <input type="text" id="f_vacancies" placeholder="4,318">
+          </div>
+          <div class="form-group">
+            <label>Application Fee</label>
+            <input type="text" id="f_fee" placeholder="Gen ₹500 / SC-ST-Female ₹0">
+          </div>
+          <div class="form-group">
+            <label>Pay Scale / Salary</label>
+            <input type="text" id="f_pay" placeholder="₹26,000 fixed (5 yrs)">
+          </div>
+          <div class="form-group">
+            <label>Current Stage (Prelims/Mains/Tier…)</label>
+            <input type="text" id="f_stage" placeholder="Mains">
+          </div>
+          <div class="form-group">
+            <label>Status *</label>
+            <select id="f_status">
+              <option value="no_announcement">No announcement</option>
+              <option value="notification_out">Notification out</option>
+              <option value="form_open">Form open</option>
+              <option value="form_closed">Form closed</option>
+              <option value="admit_card_out">Admit Card / Call Letter out</option>
+              <option value="exam_scheduled">Exam scheduled</option>
+              <option value="exam_completed">Exam completed</option>
+              <option value="answer_key_out">Answer Key out</option>
+              <option value="result_out">Result out</option>
+              <option value="merit_list_out">Merit List / DV</option>
+              <option value="final_result">Final Selection</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Notification Date</label>
+            <input type="date" id="f_notification_date">
+          </div>
+          <div class="form-group">
+            <label>Form Opens</label>
+            <input type="date" id="f_form_start">
+          </div>
+          <div class="form-group">
+            <label>Form Closes</label>
+            <input type="date" id="f_form_end">
+          </div>
+          <div class="form-group">
+            <label>Exam Date</label>
+            <input type="date" id="f_exam_date">
+          </div>
+          <div class="form-group">
+            <label>Result Date</label>
+            <input type="date" id="f_result_date">
+          </div>
+          <div class="form-group full">
+            <label>Notification PDF URL</label>
+            <input type="url" id="f_pdf" placeholder="https://…">
+          </div>
+          <div class="form-group full">
+            <label>Syllabus PDF URL</label>
+            <input type="url" id="f_syllabus" placeholder="https://… official syllabus PDF">
+          </div>
+          <div class="form-group full">
+            <label>Apply Portal Link</label>
+            <input type="url" id="f_apply" placeholder="https://…">
+          </div>
+          <div class="form-group full">
+            <label>Notes (English)</label>
+            <textarea id="f_notes_en" rows="2"></textarea>
+          </div>
+          <div class="form-group full">
+            <label>Notes (हिन्दी)</label>
+            <textarea id="f_notes_hi" rows="2"></textarea>
+          </div>
+        </div>
+      </details>
+
     </div>
     <div class="modal-footer">
       <button class="btn btn-danger hidden" id="deletePostBtn">🗑 Delete</button>
@@ -1377,6 +1522,18 @@ function showLoginError(msg) {
 
 // ═════════════════════ NAVIGATION (hash-based — survives refresh) ═════════════════════
 const VALID_SECTIONS = ['gov-posts', 'materials', 'affairs', 'users', 'analytics', 'settings'];
+
+// ─── MOBILE SIDEBAR TOGGLE ───
+(function () {
+  const sb = document.querySelector('.sidebar');
+  const bd = $('sidebarBackdrop');
+  const hb = $('hamburgerBtn');
+  if (!sb || !bd || !hb) return;
+  const close = () => { sb.classList.remove('open'); bd.classList.remove('show'); };
+  hb.onclick = () => { sb.classList.toggle('open'); bd.classList.toggle('show', sb.classList.contains('open')); };
+  bd.onclick = close;
+  sb.querySelectorAll('nav a').forEach(a => a.addEventListener('click', close));
+})();
 
 function activateSection(section) {
   if (!VALID_SECTIONS.includes(section)) section = 'gov-posts';
@@ -1777,6 +1934,8 @@ async function loadPosts() {
     renderStats();
     renderDeptFilters();
     renderPostsTable();
+    renderAttentionPanel();
+    renderBackupBanner();
   } catch (e) {
     console.error(e);
     showToast('Failed to load: ' + e.message, 'error');
@@ -1815,6 +1974,8 @@ function renderDeptFilters() {
   });
 }
 
+const STATUS_ORDER = ['no_announcement','notification_out','form_open','form_closed','admit_card_out','exam_scheduled','exam_completed','answer_key_out','result_out','merit_list_out','final_result'];
+
 function renderPostsTable() {
   const search = $('searchInput').value.toLowerCase();
   const scope = $('filterScope').value;
@@ -1845,8 +2006,12 @@ function renderPostsTable() {
     const updated = p.last_updated?.toDate ? p.last_updated.toDate() : null;
     const updatedStr = updated ? updated.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
+    const statusOptions = STATUS_ORDER.map(k =>
+      `<option value="${k}" ${k === status ? 'selected' : ''}>${(STATUS_META[k]?.label) || k.replace(/_/g, ' ')}</option>`
+    ).join('');
+
     return `<tr>
-      <td>
+      <td data-label="Bharti">
         <div class="post-name-cell">
           <div class="post-icon icon-bg-${dept}">${emoji}</div>
           <div class="post-name-text">
@@ -1855,15 +2020,15 @@ function renderPostsTable() {
           </div>
         </div>
       </td>
-      <td>
+      <td data-label="Bharti Board / Level">
         <span class="dept-badge dept-${dept}">${dept}</span>
         <span class="scope-badge">${p.scope || '?'}</span>
       </td>
-      <td><span class="status-pill status-${status}">${statusLabel}</span></td>
-      <td style="color: var(--text-sec); font-size: 12px;">${updatedStr}</td>
-      <td>
+      <td data-label="Cycle Status"><select class="pill-select status-${status}" data-inline-status="${p.id}" title="Change status">${statusOptions}</select></td>
+      <td data-label="Last Updated" style="color: var(--text-sec); font-size: 12px;">${updatedStr}</td>
+      <td data-label="Actions">
         <div class="actions-cell">
-          <button class="icon-btn" title="Edit" data-edit="${p.id}">✏️</button>
+          <button class="icon-btn" title="Edit" data-edit="${p.id}">✏️ <span class="edit-word" style="font-size:12px;font-weight:700;display:none">Edit full post</span></button>
         </div>
       </td>
     </tr>`;
@@ -1879,6 +2044,135 @@ function renderPostsTable() {
   document.querySelectorAll('[data-edit]').forEach(b => {
     b.onclick = () => openPostModal(b.dataset.edit);
   });
+  document.querySelectorAll('[data-inline-status]').forEach(sel => {
+    sel.onchange = () => inlineStatusChange(sel.dataset.inlineStatus, sel.value, sel);
+  });
+}
+
+// ─── INLINE STATUS CHANGE (from table, no modal) ───
+async function inlineStatusChange(id, newStatus, sel) {
+  const p = allPosts.find(x => x.id === id);
+  if (!p) return;
+  const prev = p.current_cycle?.status || 'no_announcement';
+  if (prev === newStatus) return;
+  sel.disabled = true;
+  try {
+    await db.collection('gov_posts').doc(id).update({
+      'current_cycle.status': newStatus,
+      last_updated: firebase.firestore.FieldValue.serverTimestamp(),
+    });
+    if (!p.current_cycle) p.current_cycle = {};
+    p.current_cycle.status = newStatus;
+    showToast(`${p.name}: → ${(STATUS_META[newStatus]?.label) || newStatus}`, 'success');
+    renderPostsTable();
+    renderAttentionPanel();
+  } catch (e) {
+    sel.value = prev;
+    showToast('Status update failed: ' + e.message, 'error');
+  }
+  sel.disabled = false;
+}
+
+// ─── NEEDS ATTENTION PANEL ───
+function _dateFromStr(s) {
+  if (!s) return null;
+  const d = new Date(s + 'T00:00:00');
+  return isNaN(d) ? null : d;
+}
+function renderAttentionPanel() {
+  const el = $('attentionPanel');
+  if (!el) return;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const in7 = new Date(today); in7.setDate(in7.getDate() + 7);
+
+  const closingSoon = [], staleDates = [], missing = { syllabus_pdf_url: [], advt_no: [], application_fee: [], total_vacancies: [], pay_scale: [] };
+
+  allPosts.forEach(p => {
+    const c = p.current_cycle || {};
+    const st = c.status || 'no_announcement';
+    const fe = _dateFromStr(c.form_end_date);
+    const ex = _dateFromStr(c.exam_date);
+
+    if (st === 'form_open' && fe && fe >= today && fe <= in7) {
+      const days = Math.round((fe - today) / 86400000);
+      closingSoon.push({ p, note: days === 0 ? 'closes TODAY' : `closes in ${days}d` });
+    }
+    if (st === 'form_open' && fe && fe < today) {
+      staleDates.push({ p, note: 'form date passed — still "Form open"' });
+    }
+    if ((st === 'admit_card_out' || st === 'exam_scheduled') && ex && ex < today) {
+      staleDates.push({ p, note: 'exam date passed — status not updated' });
+    }
+    Object.keys(missing).forEach(k => { if (!String(c[k] || '').trim()) missing[k].push(p); });
+  });
+
+  const missLabels = { syllabus_pdf_url: 'Syllabus PDF', advt_no: 'Advt. No.', application_fee: 'Application Fee', total_vacancies: 'Vacancies', pay_scale: 'Pay Scale' };
+  const missGroups = Object.entries(missing).filter(([, arr]) => arr.length);
+  const totalIssues = closingSoon.length + staleDates.length + missGroups.length;
+
+  if (!allPosts.length) { el.innerHTML = ''; return; }
+  if (!totalIssues) {
+    el.innerHTML = `<div class="attention-card"><div class="att-healthy">✅ All posts healthy — nothing needs attention</div></div>`;
+    return;
+  }
+
+  const item = (p, note, icon) =>
+    `<div class="att-item" data-open-post="${p.id}">${icon} <strong>${escape(p.name || '')}</strong><span class="att-badge">${note}</span></div>`;
+
+  let body = '';
+  if (closingSoon.length) {
+    body += `<div class="att-group-title">⏰ Forms closing within 7 days</div>` +
+      closingSoon.map(x => item(x.p, x.note, '📝')).join('');
+  }
+  if (staleDates.length) {
+    body += `<div class="att-group-title">🕰 Date passed — status looks stale</div>` +
+      staleDates.map(x => item(x.p, x.note, '⚠️')).join('');
+  }
+  if (missGroups.length) {
+    body += `<div class="att-group-title">📋 Missing data</div>` +
+      missGroups.map(([k, arr]) =>
+        `<div class="att-item" data-att-missing="${k}">🔍 <strong>${arr.length} post${arr.length > 1 ? 's' : ''}</strong>&nbsp;missing ${missLabels[k]}<span class="att-badge">tap to list</span></div>
+         <div class="att-missing-list" data-missing-list="${k}" style="display:none; padding-left: 12px;">` +
+        arr.map(p => item(p, 'open →', '·')).join('') + `</div>`
+      ).join('');
+  }
+
+  el.innerHTML = `
+    <div class="attention-card" id="attCard">
+      <div class="attention-summary" id="attToggle">⚠️ <span>${totalIssues} item${totalIssues > 1 ? 's' : ''} need attention</span><span class="att-chevron">▸</span></div>
+      <div class="attention-body">${body}</div>
+    </div>`;
+
+  $('attToggle').onclick = () => $('attCard').classList.toggle('open');
+  el.querySelectorAll('[data-open-post]').forEach(x => {
+    x.onclick = (e) => { e.stopPropagation(); openPostModal(x.dataset.openPost); };
+  });
+  el.querySelectorAll('[data-att-missing]').forEach(x => {
+    x.onclick = () => {
+      const list = el.querySelector(`[data-missing-list="${x.dataset.attMissing}"]`);
+      if (list) list.style.display = list.style.display === 'none' ? 'block' : 'none';
+    };
+  });
+}
+
+// ─── BACKUP REMINDER BANNER ───
+function renderBackupBanner() {
+  const el = $('backupBanner');
+  if (!el) return;
+  if (sessionStorage.getItem('yuva_backup_dismissed')) { el.innerHTML = ''; return; }
+  const last = Number(localStorage.getItem('yuva_last_backup') || 0);
+  const days = last ? Math.floor((Date.now() - last) / 86400000) : null;
+  if (last && days < 7) { el.innerHTML = ''; return; }
+  const msg = last ? `Last posts backup was ${days} days ago.` : `No posts backup recorded yet.`;
+  el.innerHTML = `
+    <div class="backup-banner">💾 <span>${msg} Your hand-entered posts deserve a safety copy.</span>
+      <div class="bb-actions">
+        <button class="bb-export" id="bbExportBtn">Export Posts now</button>
+        <button class="bb-dismiss" id="bbDismissBtn">Later</button>
+      </div>
+    </div>`;
+  $('bbExportBtn').onclick = () => exportCollection('gov_posts');
+  $('bbDismissBtn').onclick = () => { sessionStorage.setItem('yuva_backup_dismissed', '1'); el.innerHTML = ''; };
 }
 
 ['searchInput', 'filterScope', 'filterStatus'].forEach(id => {
@@ -1934,12 +2228,18 @@ function openPostModal(id) {
   } else {
     ['f_name','f_full_name','f_desc_en','f_desc_hi','f_min_age','f_max_age',
      'f_qualification','f_stages','f_website','f_notification_date','f_form_start',
-     'f_form_end','f_exam_date','f_result_date','f_pdf','f_syllabus','f_advt','f_vacancies','f_fee','f_pay','f_apply','f_notes_en','f_notes_hi']
+     'f_form_end','f_exam_date','f_result_date','f_pdf','f_syllabus','f_advt','f_vacancies','f_fee','f_pay','f_stage','f_apply','f_notes_en','f_notes_hi']
       .forEach(field => $(field).value = '');
     $('f_scope').value = 'Central';
     $('f_department').value = DEPARTMENTS.filter(d => d !== 'All')[0] || 'UPSC';
     $('f_status').value = 'no_announcement';
   }
+
+  // Accordion: editing → open all sections; new → only Basics + Current Cycle
+  document.querySelectorAll('#postModal details.fsec').forEach((d, idx) => {
+    if (id) d.open = true;
+    else d.open = (idx === 0 || idx === 4);
+  });
 
   $('postModal').classList.add('show');
 }
@@ -2740,6 +3040,10 @@ async function exportCollection(coll) {
     a.click();
     URL.revokeObjectURL(a.href);
     showToast(`Exported ${data.length} ${coll} records ✓`, 'success');
+    if (coll === 'gov_posts') {
+      localStorage.setItem('yuva_last_backup', String(Date.now()));
+      renderBackupBanner();
+    }
   } catch (e) {
     showToast('Export failed: ' + e.message, 'error');
   }
