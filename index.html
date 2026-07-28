@@ -1078,6 +1078,11 @@
           <button class="btn btn-outline" data-export="materials">📚 Export Materials</button>
           <button class="btn btn-outline" data-export="current_affairs">📰 Export Affairs</button>
           <button class="btn btn-outline" data-export="custom_departments">🏷 Export Categories</button>
+          <button class="btn btn-primary" id="importPostsBtn">📥 Import Posts JSON</button>
+          <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
+        </div>
+        <div class="hint" style="margin-top:8px; font-size:12px; color: var(--text-sec);">
+          Import accepts the same JSON format as "Export Posts". Items <b>with an <code>_id</code></b> overwrite/restore that exact post; items <b>without <code>_id</code></b> are added as new posts.
         </div>
       </div>
 
@@ -3052,6 +3057,74 @@ async function exportCollection(coll) {
 document.querySelectorAll('[data-export]').forEach(b => {
   b.onclick = () => exportCollection(b.dataset.export);
 });
+
+// ═════════ IMPORT POSTS JSON ═════════
+$('importPostsBtn').onclick = () => $('importFileInput').click();
+$('importFileInput').onchange = async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = ''; // allow re-selecting same file later
+  if (!file) return;
+
+  let items;
+  try {
+    items = JSON.parse(await file.text());
+  } catch (err) {
+    showToast('Invalid JSON file: ' + err.message, 'error');
+    return;
+  }
+  if (!Array.isArray(items) || !items.length) {
+    showToast('JSON must be a non-empty array of posts', 'error');
+    return;
+  }
+
+  const bad = items.filter(x => !x || typeof x !== 'object' || !String(x.name || '').trim());
+  if (bad.length) {
+    showToast(`${bad.length} item(s) missing "name" — fix the JSON first`, 'error');
+    return;
+  }
+
+  const withId = items.filter(x => x._id).length;
+  const fresh = items.length - withId;
+  const msg = `Import ${items.length} posts?\n\n` +
+    (withId ? `• ${withId} with _id → will OVERWRITE/restore those exact posts\n` : '') +
+    (fresh ? `• ${fresh} without _id → will be ADDED as new posts\n` : '') +
+    `\nThis cannot be undone (export a backup first if unsure).`;
+  if (!confirm(msg)) return;
+
+  const btn = $('importPostsBtn');
+  btn.disabled = true; btn.textContent = '⏳ Importing…';
+
+  try {
+    const CHUNK = 400; // Firestore batch limit is 500
+    let done = 0;
+    for (let i = 0; i < items.length; i += CHUNK) {
+      const batch = db.batch();
+      for (const raw of items.slice(i, i + CHUNK)) {
+        const { _id, created_at, last_updated, ...data } = raw;
+        // timestamps: keep original created_at (as real Timestamp), refresh last_updated
+        data.last_updated = firebase.firestore.FieldValue.serverTimestamp();
+        if (created_at) {
+          const d = new Date(created_at);
+          data.created_at = isNaN(d)
+            ? firebase.firestore.FieldValue.serverTimestamp()
+            : firebase.firestore.Timestamp.fromDate(d);
+        } else {
+          data.created_at = firebase.firestore.FieldValue.serverTimestamp();
+        }
+        const ref = _id ? db.collection('gov_posts').doc(_id) : db.collection('gov_posts').doc();
+        batch.set(ref, data);
+      }
+      await batch.commit();
+      done += Math.min(CHUNK, items.length - i);
+      showToast(`Imported ${done}/${items.length}…`, 'success');
+    }
+    showToast(`✅ Import complete: ${items.length} posts`, 'success');
+    loadPosts();
+  } catch (err) {
+    showToast('Import failed: ' + err.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = '📥 Import Posts JSON';
+};
 
 // ═════════════════════ HELPERS ═════════════════════
 $('categoriesModalClose').onclick = () => tryCloseCategoriesModal();
