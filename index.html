@@ -7,6 +7,10 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <style>
+    .mini-btn{margin-left:8px;padding:2px 8px;font-size:11px;font-weight:600;
+      border:1px solid #e2e8f0;background:#fff;border-radius:6px;
+      cursor:pointer;color:#7c3aed}
+    .mini-btn:hover{background:#f5f3ff}
   :root {
     --primary: #4F46E5;
     --primary-dark: #3730A3;
@@ -79,12 +83,14 @@
   @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
   .login-logo {
     width: 80px; height: 80px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    background: linear-gradient(135deg, #312E81, #1E1B4B);
     border-radius: 22px;
     display: flex; align-items: center; justify-content: center;
     font-size: 40px; margin: 0 auto 24px;
-    box-shadow: 0 8px 32px rgba(255,107,53,.35);
+    box-shadow: 0 8px 32px rgba(49,46,129,.45);
   }
+  .login-logo .brand-kite { height: 44px; width: auto; display: block; }
+  .sidebar-logo .brand-kite { height: 23px; width: auto; display: block; }
   .login-card h1 { color: #fff; font-size: 28px; font-weight: 800; margin-bottom: 6px; }
   .login-card .sub { color: rgba(255,255,255,.5); font-size: 14px; margin-bottom: 32px; }
   .login-field { position: relative; margin-bottom: 16px; text-align: left; }
@@ -164,11 +170,11 @@
   .sidebar-logo { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
   .sidebar-logo .icon {
     width: 42px; height: 42px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    background: linear-gradient(135deg, #312E81, #1E1B4B);
     border-radius: 12px;
     display: flex; align-items: center; justify-content: center;
     font-size: 22px;
-    box-shadow: 0 4px 16px rgba(255,107,53,.35);
+    box-shadow: 0 4px 16px rgba(49,46,129,.45);
   }
   .sidebar-logo span { color: #fff; font-size: 22px; font-weight: 800; }
   .sidebar-logo small { display: block; color: rgba(255,255,255,.5); font-size: 11px; font-weight: 500; }
@@ -798,7 +804,7 @@
 <!-- ═══════ LOGIN SCREEN ═══════ -->
 <div class="login-screen" id="loginScreen">
   <div class="login-card">
-    <div class="login-logo">🚀</div>
+    <div class="login-logo"><svg class="brand-kite" viewBox="0 0 62.88 100" xmlns="http://www.w3.org/2000/svg" aria-label="Yuva"><path d="M31.44 0L16.90 17.77L31.44 33.98L45.98 17.77Z" fill="#FBBF24"/><path d="M62.88 38.43L52.02 25.16L36.16 42.85L36.16 71.09Z" fill="#FBBF24"/><path d="M0 38.43L26.72 71.09L26.72 42.85L10.86 25.16Z" fill="#FBBF24"/><path d="M31.44 78.17L16.59 100L46.29 100Z" fill="#FBBF24"/></svg></div>
     <h1>Yuva Admin</h1>
     <div class="sub">Sign in to manage your app</div>
     <div class="login-error" id="loginError">Invalid email or password</div>
@@ -826,7 +832,7 @@
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-logo">
-      <div class="icon">🚀</div>
+      <div class="icon"><svg class="brand-kite" viewBox="0 0 62.88 100" xmlns="http://www.w3.org/2000/svg" aria-label="Yuva"><path d="M31.44 0L16.90 17.77L31.44 33.98L45.98 17.77Z" fill="#FBBF24"/><path d="M62.88 38.43L52.02 25.16L36.16 42.85L36.16 71.09Z" fill="#FBBF24"/><path d="M0 38.43L26.72 71.09L26.72 42.85L10.86 25.16Z" fill="#FBBF24"/><path d="M31.44 78.17L16.59 100L46.29 100Z" fill="#FBBF24"/></svg></div>
       <div><span>Yuva</span><small>Admin Panel</small></div>
     </div>
     <nav>
@@ -1079,6 +1085,7 @@
           <button class="btn btn-outline" data-export="current_affairs">📰 Export Affairs</button>
           <button class="btn btn-outline" data-export="custom_departments">🏷 Export Categories</button>
           <button class="btn btn-primary" id="importPostsBtn">📥 Import Posts JSON</button>
+          <button class="btn btn-outline" id="syllabusFromNotifBtn">🔗 Syllabus ← Notification (bulk)</button>
           <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
         </div>
         <div class="hint" style="margin-top:8px; font-size:12px; color: var(--text-sec);">
@@ -1262,7 +1269,10 @@
             <input type="url" id="f_pdf" placeholder="https://…">
           </div>
           <div class="form-group full">
-            <label>Syllabus PDF URL</label>
+            <label>Syllabus PDF URL
+              <button type="button" id="copyNotifToSyllabus" class="mini-btn"
+                title="Indian boards print the syllabus inside the notification PDF — reuse that link">↧ same as notification</button>
+            </label>
             <input type="url" id="f_syllabus" placeholder="https://… official syllabus PDF">
           </div>
           <div class="form-group full">
@@ -2108,10 +2118,17 @@ function renderAttentionPanel() {
     if ((st === 'admit_card_out' || st === 'exam_scheduled') && ex && ex < today) {
       staleDates.push({ p, note: 'exam date passed — status not updated' });
     }
-    Object.keys(missing).forEach(k => { if (!String(c[k] || '').trim()) missing[k].push(p); });
+    // Syllabus only matters while an exam is live — don't nag about drives
+    // that finished months ago.
+    const LIVE = ['notification_out', 'form_open', 'form_closed',
+                  'admit_card_out', 'exam_scheduled'];
+    Object.keys(missing).forEach(k => {
+      if (k === 'syllabus_pdf_url' && !LIVE.includes(st)) return;
+      if (!String(c[k] || '').trim()) missing[k].push(p);
+    });
   });
 
-  const missLabels = { syllabus_pdf_url: 'Syllabus PDF', advt_no: 'Advt. No.', application_fee: 'Application Fee', total_vacancies: 'Vacancies', pay_scale: 'Pay Scale' };
+  const missLabels = { syllabus_pdf_url: 'Syllabus PDF (live exams)', advt_no: 'Advt. No.', application_fee: 'Application Fee', total_vacancies: 'Vacancies', pay_scale: 'Pay Scale' };
   const missGroups = Object.entries(missing).filter(([, arr]) => arr.length);
   const totalIssues = closingSoon.length + staleDates.length + missGroups.length;
 
@@ -3057,6 +3074,49 @@ async function exportCollection(coll) {
 document.querySelectorAll('[data-export]').forEach(b => {
   b.onclick = () => exportCollection(b.dataset.export);
 });
+
+// ═════════ SYLLABUS HELPERS ═════════
+// Indian recruitment boards publish the syllabus as a chapter inside the
+// notification PDF, so reusing that link is correct — not a placeholder.
+$('copyNotifToSyllabus').onclick = () => {
+  const src = $('f_pdf').value.trim();
+  if (!src) { showToast('Add the Notification PDF URL first', 'error'); return; }
+  $('f_syllabus').value = src;
+  showToast('Syllabus link set from notification', 'success');
+};
+
+$('syllabusFromNotifBtn').onclick = async () => {
+  const targets = allPosts.filter(p => {
+    const c = p.current_cycle || {};
+    return String(c.notification_pdf_url || '').trim() &&
+           !String(c.syllabus_pdf_url || '').trim();
+  });
+  if (!targets.length) {
+    showToast('Nothing to copy — every post with a notification PDF already has a syllabus link', 'success');
+    return;
+  }
+  if (!confirm(`Set the syllabus link from the notification PDF on ${targets.length} post(s)?\n\n` +
+               targets.slice(0, 12).map(p => '\u2022 ' + p.name).join('\n') +
+               (targets.length > 12 ? `\n\u2026and ${targets.length - 12} more` : ''))) return;
+
+  const btn = $('syllabusFromNotifBtn');
+  btn.disabled = true; btn.textContent = '\u23f3 Updating\u2026';
+  try {
+    const batch = db.batch();
+    targets.forEach(p => {
+      batch.update(db.collection('gov_posts').doc(p.id), {
+        'current_cycle.syllabus_pdf_url': p.current_cycle.notification_pdf_url,
+        last_updated: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    });
+    await batch.commit();
+    showToast(`\u2705 Syllabus link set on ${targets.length} post(s)`, 'success');
+    loadPosts();
+  } catch (err) {
+    showToast('Failed: ' + err.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = '\ud83d\udd17 Syllabus \u2190 Notification (bulk)';
+};
 
 // ═════════ IMPORT POSTS JSON ═════════
 $('importPostsBtn').onclick = () => $('importFileInput').click();
