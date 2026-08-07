@@ -1076,20 +1076,41 @@
         </div>
       </div>
 
+      <!-- ═══════ 1. EXPORTS — read-only, always safe ═══════ -->
       <div class="settings-card">
         <h3>💾 Data Backup</h3>
-        <div class="desc">Download a JSON backup of your data. Do this regularly — especially after big data-entry sessions. If anything ever goes wrong, you can restore from these files.</div>
+        <div class="desc">Download a JSON snapshot of your data. Nothing is changed — these are read-only copies. Do this after every big data-entry session.</div>
         <div class="settings-actions">
           <button class="btn btn-outline" data-export="gov_posts">📋 Export Posts</button>
           <button class="btn btn-outline" data-export="materials">📚 Export Materials</button>
           <button class="btn btn-outline" data-export="current_affairs">📰 Export Affairs</button>
           <button class="btn btn-outline" data-export="custom_departments">🏷 Export Categories</button>
+        </div>
+      </div>
+
+      <!-- ═══════ 2. RESTORE — writes to Firestore, can overwrite ═══════ -->
+      <div class="settings-card" style="border-left: 4px solid var(--warning);">
+        <h3>♻️ Restore from Backup</h3>
+        <div class="desc">Put posts back from a file you exported earlier. Use this after an accidental delete, or to move data between projects.</div>
+        <div class="settings-actions">
           <button class="btn btn-primary" id="importPostsBtn">📥 Import Posts JSON</button>
-          <button class="btn btn-outline" id="syllabusFromNotifBtn">🔗 Syllabus ← Notification (bulk)</button>
           <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
         </div>
-        <div class="hint" style="margin-top:8px; font-size:12px; color: var(--text-sec);">
-          Import accepts the same JSON format as "Export Posts". Items <b>with an <code>_id</code></b> overwrite/restore that exact post; items <b>without <code>_id</code></b> are added as new posts.
+        <div style="margin-top:10px; font-size:12px; color: var(--text-sec); line-height:1.6;">
+          Accepts the same format as “Export Posts”. Items <b>with an <code>_id</code></b> overwrite that exact post; items <b>without <code>_id</code></b> are added as new.
+          <br><b style="color:#B45309;">⚠ This cannot be undone — export a backup first.</b>
+        </div>
+      </div>
+
+      <!-- ═══════ 3. BULK TOOLS — edits many posts at once ═══════ -->
+      <div class="settings-card">
+        <h3>🛠 Bulk Tools</h3>
+        <div class="desc">One-click actions applied across many posts at once.</div>
+        <div class="settings-actions">
+          <button class="btn btn-outline" id="syllabusFromNotifBtn">🔗 Syllabus ← Notification (bulk)</button>
+        </div>
+        <div style="margin-top:10px; font-size:12px; color: var(--text-sec); line-height:1.6;">
+          Indian boards print the syllabus inside the notification PDF. This copies the notification link into the syllabus field — but <b>only for posts where syllabus is empty</b>. Existing syllabus links are never touched.
         </div>
       </div>
 
