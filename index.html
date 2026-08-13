@@ -1148,13 +1148,15 @@
       <!-- ═══ 2. RESTORE — writes to Firestore, can overwrite ═══ -->
       <div class="settings-card" style="border-left: 4px solid var(--warning);">
         <h3>♻️ Restore from Backup</h3>
-        <div class="desc">Put posts back from a file you exported earlier. Use this after an accidental delete, or to move data between projects.</div>
+        <div class="desc">Put posts or study materials back from a file you exported earlier. Use this after an accidental delete, to bulk-add new records, or to move data between projects.</div>
         <div class="settings-actions">
           <button class="btn btn-primary" id="importPostsBtn">📥 Import Posts JSON</button>
+          <button class="btn btn-primary" id="importMaterialsBtn">📚 Import Materials JSON</button>
           <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
+          <input type="file" id="importMaterialsInput" accept=".json,application/json" style="display:none">
         </div>
         <div class="settings-note">
-          Accepts the same format as “Export Posts”. Items <b>with an <code>_id</code></b> overwrite that exact post; items <b>without <code>_id</code></b> are added as new.
+          Accepts the same format as “Export Posts” and “Export Materials”. Items <b>with an <code>_id</code></b> overwrite that exact record; items <b>without <code>_id</code></b> are added as new.
           <br><b style="color:#B45309;">⚠ This cannot be undone — export a backup first.</b>
         </div>
       </div>
@@ -1244,8 +1246,8 @@
             <textarea id="f_desc_en" rows="3" placeholder="What this exam/post is about…"></textarea>
           </div>
           <div class="form-group full">
-            <label>Description (हिन्दी)</label>
-            <textarea id="f_desc_hi" rows="3" placeholder="यह परीक्षा/पद किस बारे में है…"></textarea>
+            <label>Description (ગુજરાતી)</label>
+            <textarea id="f_desc_gu" rows="3" placeholder="આ પરીક્ષા/જગ્યા શેના વિશે છે…"></textarea>
           </div>
         </div>
       </details>
@@ -1362,8 +1364,8 @@
             <textarea id="f_notes_en" rows="2"></textarea>
           </div>
           <div class="form-group full">
-            <label>Notes (हिन्दी)</label>
-            <textarea id="f_notes_hi" rows="2"></textarea>
+            <label>Notes (ગુજરાતી)</label>
+            <textarea id="f_notes_gu" rows="2"></textarea>
           </div>
         </div>
       </details>
@@ -1453,10 +1455,10 @@
         <div class="form-group">
           <label>Language</label>
           <select id="m_language">
-            <option value="english">English</option>
-            <option value="hindi">हिन्दी (Hindi)</option>
             <option value="gujarati">ગુજરાતી (Gujarati)</option>
-            <option value="both">Both (EN + हिन्दी)</option>
+            <option value="english">English</option>
+            <option value="both">Both (EN + ગુજરાતી)</option>
+            <option value="hindi">हिन्दी (Hindi) — legacy, app no longer uses this</option>
           </select>
         </div>
         <div class="form-group full">
@@ -2326,7 +2328,7 @@ function openPostModal(id) {
     $('f_scope').value = p.scope || 'Central';
     $('f_department').value = p.department || 'Other';
     $('f_desc_en').value = p.description_en || '';
-    $('f_desc_hi').value = p.description_hi || '';
+    $('f_desc_gu').value = p.description_gu || '';
     $('f_min_age').value = p.eligibility?.min_age ?? '';
     $('f_max_age').value = p.eligibility?.max_age ?? '';
     $('f_qualification').value = p.eligibility?.qualification || '';
@@ -2348,11 +2350,11 @@ function openPostModal(id) {
     $('f_stage').value = c.current_stage || '';
     $('f_apply').value = c.apply_link || '';
     $('f_notes_en').value = c.notes_en || '';
-    $('f_notes_hi').value = c.notes_hi || '';
+    $('f_notes_gu').value = c.notes_gu || '';
   } else {
-    ['f_name','f_full_name','f_desc_en','f_desc_hi','f_min_age','f_max_age',
+    ['f_name','f_full_name','f_desc_en','f_desc_gu','f_min_age','f_max_age',
      'f_qualification','f_stages','f_website','f_notification_date','f_form_start',
-     'f_form_end','f_exam_date','f_result_date','f_pdf','f_syllabus','f_advt','f_vacancies','f_fee','f_pay','f_stage','f_apply','f_notes_en','f_notes_hi']
+     'f_form_end','f_exam_date','f_result_date','f_pdf','f_syllabus','f_advt','f_vacancies','f_fee','f_pay','f_stage','f_apply','f_notes_en','f_notes_gu']
       .forEach(field => $(field).value = '');
     $('f_scope').value = 'Central';
     $('f_department').value = DEPARTMENTS.filter(d => d !== 'All')[0] || 'UPSC';
@@ -2384,7 +2386,7 @@ $('savePostBtn').onclick = async () => {
     scope: $('f_scope').value,
     department: $('f_department').value,
     description_en: $('f_desc_en').value.trim(),
-    description_hi: $('f_desc_hi').value.trim(),
+    description_gu: $('f_desc_gu').value.trim(),
     eligibility: {
       min_age: $('f_min_age').value ? Number($('f_min_age').value) : null,
       max_age: $('f_max_age').value ? Number($('f_max_age').value) : null,
@@ -2408,7 +2410,7 @@ $('savePostBtn').onclick = async () => {
       current_stage: $('f_stage').value.trim(),
       apply_link: $('f_apply').value.trim(),
       notes_en: $('f_notes_en').value.trim(),
-      notes_hi: $('f_notes_hi').value.trim(),
+      notes_gu: $('f_notes_gu').value.trim(),
     },
     last_updated: firebase.firestore.FieldValue.serverTimestamp(),
   };
@@ -2532,7 +2534,7 @@ function renderMaterialsTable() {
 
   const rows = filtered.map(m => {
     const meta = MAT_TYPE_META[m.type] || { label: m.type, emoji: '📄', color: '#64748B' };
-    const langLabel = m.language === 'hindi' ? 'हिन्दी' : m.language === 'both' ? 'EN+हिन्दी' : m.language === 'gujarati' ? 'ગુજરાતી' : 'English';
+    const langLabel = m.language === 'hindi' ? 'हिन्दी' : m.language === 'both' ? 'EN+ગુજરાતી' : m.language === 'gujarati' ? 'ગુજરાતી' : 'English';
     const uploaded = m.uploadedAt?.toDate ? m.uploadedAt.toDate() : null;
     const dateStr = uploaded ? uploaded.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
     return `<tr>
@@ -3291,6 +3293,97 @@ $('importFileInput').onchange = async (e) => {
     showToast('Import failed: ' + err.message, 'error');
   }
   btn.disabled = false; btn.textContent = '📥 Import Posts JSON';
+};
+
+// ═════════ IMPORT MATERIALS JSON ═════════
+// Mirrors the posts importer. Items WITH an _id overwrite that exact material;
+// items WITHOUT one are added as new. Accepts the same shape that
+// "Export Materials" produces, so a backup round-trips cleanly.
+$('importMaterialsBtn').onclick = () => $('importMaterialsInput').click();
+$('importMaterialsInput').onchange = async (e) => {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = ''; // allow re-selecting the same file later
+  if (!file) return;
+
+  let items;
+  try {
+    items = JSON.parse(await file.text());
+  } catch (err) {
+    showToast('Invalid JSON file: ' + err.message, 'error');
+    return;
+  }
+  if (!Array.isArray(items) || !items.length) {
+    showToast('JSON must be a non-empty array of materials', 'error');
+    return;
+  }
+
+  // title, subject and pdfUrl are what the app needs to render a usable card.
+  const bad = items.filter(x =>
+    !x || typeof x !== 'object' ||
+    !String(x.title || '').trim() ||
+    !String(x.subject || '').trim() ||
+    !String(x.pdfUrl || '').trim()
+  );
+  if (bad.length) {
+    showToast(`${bad.length} item(s) missing title, subject or pdfUrl — fix the JSON first`, 'error');
+    return;
+  }
+
+  const VALID_TYPES = ['notes', 'practice_sets', 'previous_papers', 'reference_books', 'magazines'];
+  const badType = items.filter(x => x.type && !VALID_TYPES.includes(x.type));
+  if (badType.length) {
+    showToast(`${badType.length} item(s) have an unknown "type" — use: ${VALID_TYPES.join(', ')}`, 'error');
+    return;
+  }
+
+  const withId = items.filter(x => x._id).length;
+  const fresh = items.length - withId;
+  const msg = `Import ${items.length} materials?\n\n` +
+    (withId ? `• ${withId} with _id → will OVERWRITE those exact materials\n` : '') +
+    (fresh ? `• ${fresh} without _id → will be ADDED as new materials\n` : '') +
+    `\nThis cannot be undone (export a backup first if unsure).`;
+  if (!confirm(msg)) return;
+
+  const btn = $('importMaterialsBtn');
+  btn.disabled = true; btn.textContent = '⏳ Importing…';
+
+  try {
+    const CHUNK = 400; // Firestore batch limit is 500
+    let done = 0;
+    for (let i = 0; i < items.length; i += CHUNK) {
+      const batch = db.batch();
+      for (const raw of items.slice(i, i + CHUNK)) {
+        const { _id, uploadedAt, ...data } = raw;
+
+        // Defaults so a partial JSON still produces a valid card in the app.
+        data.type = data.type || 'notes';
+        data.language = data.language || 'gujarati';
+        data.description = data.description || '';
+        data.pages = (data.pages === 0 || data.pages) ? Number(data.pages) : null;
+
+        // Preserve the original upload date on a restore; stamp new ones now.
+        if (uploadedAt) {
+          const d = new Date(uploadedAt);
+          data.uploadedAt = isNaN(d)
+            ? firebase.firestore.FieldValue.serverTimestamp()
+            : firebase.firestore.Timestamp.fromDate(d);
+        } else {
+          data.uploadedAt = firebase.firestore.FieldValue.serverTimestamp();
+        }
+
+        const ref = _id ? db.collection('materials').doc(_id) : db.collection('materials').doc();
+        batch.set(ref, data);
+      }
+      await batch.commit();
+      done += Math.min(CHUNK, items.length - i);
+      showToast(`Imported ${done}/${items.length}…`, 'success');
+    }
+    showToast(`✅ Import complete: ${items.length} materials`, 'success');
+    loadMaterials();
+  } catch (err) {
+    showToast('Import failed: ' + err.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = '📚 Import Materials JSON';
 };
 
 // ═════════════════════ HELPERS ═════════════════════
